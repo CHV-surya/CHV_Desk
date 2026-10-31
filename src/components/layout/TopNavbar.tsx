@@ -24,6 +24,7 @@ import { useData } from '../../context/DataContext';
 import { Badge } from '../common/Badge';
 import { Modal } from '../common/Modal';
 import { Avatar } from '../common/Avatar';
+import { getFormattedTimeIST, getFormattedHeaderDateIST } from '../../lib/date';
 import { Button } from '../common/Button';
 
 interface TopNavbarProps {
@@ -110,33 +111,19 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onToggleSidebar }) => {
   const notificationDropdownRef = useRef<HTMLDivElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Live system clock in 12-hour AM/PM format
-  const getFormattedTime = (): string => {
-    return new Date().toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true,
-    });
-  };
-
-  const getFormattedHeaderDate = (): string => {
-    return new Date().toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
-
-  const [currentTime, setCurrentTime] = useState<string>(getFormattedTime);
-  const [currentDate] = useState<string>(getFormattedHeaderDate);
+  // Live system clock in 12-hour AM/PM format (strictly Indian Standard Time - Asia/Kolkata)
+  const [currentTime, setCurrentTime] = useState<string>(() => getFormattedTimeIST());
+  const [currentDate, setCurrentDate] = useState<string>(() => getFormattedHeaderDateIST());
 
   useEffect(() => {
-    setCurrentTime(getFormattedTime());
-    const interval = setInterval(() => {
-      setCurrentTime(getFormattedTime());
-    }, 1000);
+    const updateClock = () => {
+      const now = new Date();
+      setCurrentTime(getFormattedTimeIST(now));
+      setCurrentDate(getFormattedHeaderDateIST(now));
+    };
+
+    updateClock();
+    const interval = setInterval(updateClock, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -408,10 +395,13 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onToggleSidebar }) => {
           <span>{currentDate}</span>
         </div>
 
-        {/* Live System Clock (12-hour AM/PM format) */}
+        {/* Live System Clock (12-hour AM/PM format in IST) */}
         <div className="hidden sm:flex items-center gap-2 px-3.5 py-2 bg-white/80 rounded-xl text-sm font-mono font-bold text-slate-800 border border-slate-200/80 shadow-2xs select-none">
           <Clock className="w-4 h-4 text-blue-600 animate-pulse" />
           <span>{currentTime}</span>
+          <span className="text-[10px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-sans">
+            IST
+          </span>
         </div>
 
         {/* Employee Today's Status badge */}

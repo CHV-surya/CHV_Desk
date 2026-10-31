@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Department, Employee, Project, DailyActivity, ActivityStatus } from '../types';
 import { api, ApiError } from '../lib/api';
 import { useAuth } from './AuthContext';
+import { getFormattedDate } from '../lib/date';
 
 interface DataContextType {
   departments: Department[];
@@ -119,6 +120,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshData();
   }, [refreshData]);
 
+  // Auto-polling: refresh data every 30 seconds for live updates
+  useEffect(() => {
+    if (!currentUser) return;
+    const pollInterval = setInterval(() => {
+      refreshData();
+    }, 30000);
+    return () => clearInterval(pollInterval);
+  }, [currentUser, refreshData]);
+
   // Department operations
   const addDepartment = async (dept: {
     name: string;
@@ -130,6 +140,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const created = await api.post<Department>('/departments', dept);
       setDepartments((prev) => [created, ...prev]);
+      // Background refresh for full consistency
+      refreshData();
     } catch (err: any) {
       console.error('Error adding department:', err);
       throw err;
@@ -140,6 +152,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const updated = await api.patch<Department>(`/departments/${id}`, updates);
       setDepartments((prev) => prev.map((d) => (d.id === id ? { ...d, ...updated } : d)));
+      refreshData();
     } catch (err: any) {
       console.error('Error updating department:', err);
       throw err;
@@ -156,6 +169,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isActive: newActiveState,
       });
       setDepartments((prev) => prev.map((d) => (d.id === id ? { ...d, ...updated } : d)));
+      refreshData();
     } catch (err: any) {
       console.error('Error toggling department status:', err);
       throw err;
@@ -175,6 +189,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const created = await api.post<Employee>('/employees', emp);
       setEmployees((prev) => [created, ...prev]);
+      refreshData();
       return { success: true };
     } catch (err: any) {
       return {
@@ -191,6 +206,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const updated = await api.patch<Employee>(`/employees/${id}`, updates);
       setEmployees((prev) => prev.map((e) => (e.id === id ? { ...e, ...updated } : e)));
+      refreshData();
       return { success: true };
     } catch (err: any) {
       return {
@@ -204,6 +220,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await api.delete(`/employees/${id}`);
       setEmployees((prev) => prev.filter((e) => e.id !== id));
+      refreshData();
     } catch (err: any) {
       console.error('Error deleting employee:', err);
       throw err;
@@ -225,6 +242,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: proj.description,
       });
       setProjects((prev) => [created, ...prev]);
+      refreshData();
     } catch (err: any) {
       console.error('Error adding project:', err);
       throw err;
@@ -239,6 +257,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       const updated = await api.patch<Project>(`/projects/${id}`, payload);
       setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...updated } : p)));
+      refreshData();
     } catch (err: any) {
       console.error('Error renaming project:', err);
       throw err;
@@ -249,6 +268,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await api.delete(`/projects/${id}`);
       setProjects((prev) => prev.filter((p) => p.id !== id));
+      refreshData();
     } catch (err: any) {
       console.error('Error deleting project:', err);
       throw err;
@@ -260,7 +280,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     employeeId: string,
     departmentId?: string
   ): DailyActivity | undefined => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getFormattedDate();
     return activities.find(
       (a) =>
         a.employeeId === employeeId &&
@@ -336,7 +356,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     notes: string
   ) => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getFormattedDate();
       const existing = activities.find(
         (a) => a.employeeId === employeeId && a.date === today
       );

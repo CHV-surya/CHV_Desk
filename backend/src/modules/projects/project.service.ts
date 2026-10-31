@@ -1,6 +1,7 @@
 import { db } from '../../db/index.js';
 import { projects, departments, users, userDepartments } from '../../db/schema.js';
 import { eq, and, sql, desc, or } from 'drizzle-orm';
+import { formatDateIST } from '../../utils/date.js';
 
 export interface ProjectFilters {
   departmentId?: string;
@@ -75,7 +76,7 @@ export async function listProjects(filters: ProjectFilters) {
     createdByName: r.createdByName || 'System Administrator',
     description: r.description || '',
     status: r.status,
-    createdAt: r.createdAt.toISOString().split('T')[0],
+    createdAt: formatDateIST(r.createdAt) || '',
   }));
 }
 
@@ -119,7 +120,7 @@ export async function getProjectById(id: string, userId?: string, isAdmin: boole
     createdByName: row.createdByName || 'System Administrator',
     description: row.description || '',
     status: row.status,
-    createdAt: row.createdAt.toISOString().split('T')[0],
+    createdAt: formatDateIST(row.createdAt) || '',
   };
 }
 

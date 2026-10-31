@@ -38,6 +38,7 @@ async function request<T = any>(
   }
 
   const config: RequestInit = {
+    cache: 'no-store',
     ...options,
     headers,
     credentials: 'include', // Crucial for HTTP-only JWT cookies

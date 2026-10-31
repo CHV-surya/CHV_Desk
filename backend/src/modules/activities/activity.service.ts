@@ -124,7 +124,15 @@ export async function listActivities(filters: ActivityFilters) {
 export async function getTodayActivityForEmployee(employeeId: string, departmentId?: string) {
   const today = getTodayDateString();
 
-  const [act] = await db
+  const conditions = [
+    eq(dailyActivities.employeeId, employeeId),
+    eq(dailyActivities.workDate, today),
+  ];
+  if (departmentId) {
+    conditions.push(eq(dailyActivities.departmentId, departmentId));
+  }
+
+  let [act] = await db
     .select({
       id: dailyActivities.id,
       employeeId: dailyActivities.employeeId,
@@ -144,13 +152,47 @@ export async function getTodayActivityForEmployee(employeeId: string, department
     .from(dailyActivities)
     .innerJoin(users, eq(dailyActivities.employeeId, users.id))
     .innerJoin(departments, eq(dailyActivities.departmentId, departments.id))
-    .where(
-      and(
-        eq(dailyActivities.employeeId, employeeId),
-        eq(dailyActivities.workDate, today)
-      )
-    )
+    .where(and(...conditions))
     .limit(1);
+
+  // Fallback: If no activity for today's date yet, check if there is an active session from right before midnight that is still 'working'
+  if (!act) {
+    const activeConditions = [
+      eq(dailyActivities.employeeId, employeeId),
+      eq(dailyActivities.status, 'working'),
+    ];
+    if (departmentId) {
+      activeConditions.push(eq(dailyActivities.departmentId, departmentId));
+    }
+
+    const [activeShift] = await db
+      .select({
+        id: dailyActivities.id,
+        employeeId: dailyActivities.employeeId,
+        employeeName: users.fullName,
+        departmentId: dailyActivities.departmentId,
+        departmentName: departments.name,
+        projectId: dailyActivities.projectId,
+        workDate: dailyActivities.workDate,
+        joinTime: dailyActivities.joinTime,
+        endTime: dailyActivities.endTime,
+        workingMinutes: dailyActivities.workingMinutes,
+        notes: dailyActivities.notes,
+        status: dailyActivities.status,
+        createdAt: dailyActivities.createdAt,
+        updatedAt: dailyActivities.updatedAt,
+      })
+      .from(dailyActivities)
+      .innerJoin(users, eq(dailyActivities.employeeId, users.id))
+      .innerJoin(departments, eq(dailyActivities.departmentId, departments.id))
+      .where(and(...activeConditions))
+      .orderBy(desc(dailyActivities.workDate), desc(dailyActivities.joinTime))
+      .limit(1);
+
+    if (activeShift) {
+      act = activeShift;
+    }
+  }
 
   if (!act) {
     return null;
@@ -259,16 +301,41 @@ export async function endToday(employeeId: string, departmentId?: string) {
   const today = getTodayDateString();
   const now = new Date();
 
-  const [existing] = await db
+  const conditions = [
+    eq(dailyActivities.employeeId, employeeId),
+    eq(dailyActivities.workDate, today),
+  ];
+  if (departmentId) {
+    conditions.push(eq(dailyActivities.departmentId, departmentId));
+  }
+
+  let [existing] = await db
     .select()
     .from(dailyActivities)
-    .where(
-      and(
-        eq(dailyActivities.employeeId, employeeId),
-        eq(dailyActivities.workDate, today)
-      )
-    )
+    .where(and(...conditions))
     .limit(1);
+
+  // If no record found for today's date, check if there is an active 'working' session that crossed midnight
+  if (!existing || !existing.joinTime) {
+    const activeConditions = [
+      eq(dailyActivities.employeeId, employeeId),
+      eq(dailyActivities.status, 'working'),
+    ];
+    if (departmentId) {
+      activeConditions.push(eq(dailyActivities.departmentId, departmentId));
+    }
+
+    const [activeSession] = await db
+      .select()
+      .from(dailyActivities)
+      .where(and(...activeConditions))
+      .orderBy(desc(dailyActivities.workDate), desc(dailyActivities.joinTime))
+      .limit(1);
+
+    if (activeSession && activeSession.joinTime) {
+      existing = activeSession;
+    }
+  }
 
   if (!existing || !existing.joinTime) {
     throw {
@@ -290,7 +357,7 @@ export async function endToday(employeeId: string, departmentId?: string) {
     })
     .where(eq(dailyActivities.id, existing.id));
 
-  return getTodayActivityForEmployee(employeeId);
+  return getTodayActivityForEmployee(employeeId, departmentId);
 }
 
 export async function updateDailyNotes(

@@ -33,6 +33,16 @@ export function createApp(): Express {
 
   // Core Middleware
   app.use(cors(corsOptions));
+
+  // Disable caching on all API routes so Vercel Edge CDN and browsers never return stale data
+  app.use('/api', (_req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    next();
+  });
+
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());

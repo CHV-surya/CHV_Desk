@@ -54,9 +54,16 @@ export const AdminDashboard: React.FC = () => {
 
   const attendanceRate = totalEmployees > 0 ? Math.round((activeToday / totalEmployees) * 100) : 0;
 
-  // Greeting based on time
+  // Greeting based on IST time
   const getGreeting = () => {
-    const hour = new Date().getHours();
+    const hour = parseInt(
+      new Date().toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Kolkata',
+        hour: 'numeric',
+        hour12: false,
+      }),
+      10
+    );
     if (hour < 12) return 'Good morning';
     if (hour < 17) return 'Good afternoon';
     return 'Good evening';
@@ -85,6 +92,7 @@ export const AdminDashboard: React.FC = () => {
   }
 
   const currentDateDisplay = new Date().toLocaleDateString('en-US', {
+    timeZone: 'Asia/Kolkata',
     weekday: 'long',
     month: 'long',
     day: 'numeric',

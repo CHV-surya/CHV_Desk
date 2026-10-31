@@ -21,20 +21,22 @@ export function verifyToken(token: string): JwtPayload {
 }
 
 export function setAuthCookie(res: Response, token: string): void {
+  const sameSite = env.COOKIE_SAME_SITE || 'lax';
   res.cookie(AUTH_COOKIE_NAME, token, {
     httpOnly: true,
-    secure: env.isProduction,
-    sameSite: env.isProduction ? 'none' : 'lax',
+    secure: env.isProduction || sameSite === 'none',
+    sameSite: sameSite,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     path: '/',
   });
 }
 
 export function clearAuthCookie(res: Response): void {
+  const sameSite = env.COOKIE_SAME_SITE || 'lax';
   res.clearCookie(AUTH_COOKIE_NAME, {
     httpOnly: true,
-    secure: env.isProduction,
-    sameSite: env.isProduction ? 'none' : 'lax',
+    secure: env.isProduction || sameSite === 'none',
+    sameSite: sameSite,
     path: '/',
   });
 }

@@ -21,11 +21,19 @@ export const corsOptions: CorsOptions = {
       return callback(null, true);
     }
 
+    // Support Vercel Preview & Production Deployments
+    if (
+      (process.env.VERCEL || process.env.NODE_ENV === 'production') &&
+      origin.endsWith('.vercel.app')
+    ) {
+      return callback(null, true);
+    }
+
     callback(new Error(`Origin ${origin} not allowed by CORS`));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
   exposedHeaders: ['Set-Cookie'],
 };
 

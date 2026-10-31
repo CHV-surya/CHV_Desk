@@ -15,9 +15,21 @@ import activityRoutes from './modules/activities/activity.routes.js';
 import attendanceRoutes from './modules/attendance/attendance.routes.js';
 import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
 import retentionRoutes from './modules/retention/retention.routes.js';
+import cronRoutes from './modules/cron/cron.routes.js';
 
 export function createApp(): Express {
   const app = express();
+
+  // Vercel serverless request path normalization
+  app.use((req, _res, next) => {
+    const matched = (req.headers['x-matched-path'] || req.headers['x-forwarded-uri']) as string | undefined;
+    if (matched && matched.startsWith('/api')) {
+      req.url = matched;
+    } else if (!req.url.startsWith('/api')) {
+      req.url = `/api${req.url.startsWith('/') ? '' : '/'}${req.url}`;
+    }
+    next();
+  });
 
   // Core Middleware
   app.use(cors(corsOptions));
@@ -44,6 +56,7 @@ export function createApp(): Express {
   app.use('/api/attendance', attendanceRoutes);
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/admin/retention', retentionRoutes);
+  app.use('/api/cron', cronRoutes);
 
   // Global Error Handler
   app.use(errorHandler);

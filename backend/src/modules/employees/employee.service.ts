@@ -176,7 +176,7 @@ export async function createEmployee(data: {
     }
   }
 
-  const plainPassword = data.password && data.password.trim() ? data.password.trim() : 'demo123';
+  const plainPassword = data.password && data.password.trim() ? data.password.trim() : 'worktrack123';
   const passwordHash = await hashPassword(plainPassword);
 
   const [newUser] = await db
@@ -300,7 +300,7 @@ export async function resetEmployeePassword(id: string, newPassword?: string) {
     throw { status: 404, message: 'Employee not found' };
   }
 
-  const pass = newPassword && newPassword.trim() ? newPassword.trim() : 'demo123';
+  const pass = newPassword && newPassword.trim() ? newPassword.trim() : 'worktrack123';
   const passwordHash = await hashPassword(pass);
 
   await db

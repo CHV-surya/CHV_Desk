@@ -20,18 +20,20 @@ const server = app.listen(env.PORT, async () => {
   }
   console.log(`==============================================\n`);
 
-  // Monthly retention job: Runs on 1st of every month at 00:05 AM in Asia/Kolkata
-  cron.schedule('5 0 1 * *', async () => {
-    console.log('⏰ Running automated monthly retention cleanup...');
-    try {
-      const result = await runRetentionCleanup(false);
-      console.log('✅ Automated retention cleanup completed:', result.message);
-    } catch (err) {
-      console.error('❌ Automated retention cleanup error:', err);
-    }
-  }, {
-    timezone: 'Asia/Kolkata',
-  });
+  // Monthly retention job: For local standalone server runtime only (in production on Vercel, Vercel Cron is used)
+  if (!process.env.VERCEL && env.NODE_ENV !== 'production') {
+    cron.schedule('5 0 1 * *', async () => {
+      console.log('⏰ Running local dev retention cleanup...');
+      try {
+        const result = await runRetentionCleanup(false);
+        console.log('✅ Local retention cleanup completed:', result.message);
+      } catch (err) {
+        console.error('❌ Local retention cleanup error:', err);
+      }
+    }, {
+      timezone: 'Asia/Kolkata',
+    });
+  }
 });
 
 process.on('SIGTERM', () => {

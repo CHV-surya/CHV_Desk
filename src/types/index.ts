@@ -125,3 +125,66 @@ export interface DigitalMarketingWorkspaceData {
   entries: DigitalMarketingEntry[];
 }
 
+// Phase 3: Admin Scheduler Types
+export type SchedulerTaskStatus = 'pending' | 'completed';
+export type SchedulerTaskClassification = 'upcoming' | 'ongoing' | 'overdue' | 'completed';
+
+export interface SchedulerTask {
+  id: string;
+  title: string;
+  description?: string | null;
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+  startTime?: string | null;
+  endTime?: string | null;
+  status: SchedulerTaskStatus;
+  createdBy?: string | null;
+  createdByName?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  isUpcoming: boolean;
+  isOngoing: boolean;
+  isOverdue: boolean;
+  isCompleted: boolean;
+  classification: SchedulerTaskClassification;
+}
+
+// Phase 3: Employee Monthly Activity Export Types
+export interface EmployeeMonthlyActivityRecord {
+  id: string;
+  employeeName: string;
+  departmentName: string;
+  workDate: string;
+  joinTime: string;
+  endTime: string;
+  workingHours: string;
+  workingMinutes: number;
+  dailyNotes: string;
+  projectName: string;
+  projectDetails: string;
+  status: ActivityStatus;
+}
+
+export interface EmployeeMonthlyActivityData {
+  employee: {
+    id: string;
+    fullName: string;
+    username: string;
+    email: string;
+    role: UserRole;
+    isActive: boolean;
+    departments: { id: string; name: string; color: string }[];
+  };
+  month: number;
+  year: number;
+  monthName: string;
+  summary: {
+    totalDaysWorked: number;
+    totalWorkingMinutes: number;
+    totalWorkingHours: string;
+    completedShifts: number;
+    inProgressShifts: number;
+  };
+  records: EmployeeMonthlyActivityRecord[];
+}
+

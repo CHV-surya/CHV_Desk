@@ -172,12 +172,36 @@ export const digitalMarketingEntries = pgTable(
   ]
 );
 
+// 8. Scheduler Tasks Table (Admin Scheduler)
+export const schedulerTasks = pgTable(
+  'scheduler_tasks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    title: varchar('title', { length: 255 }).notNull(),
+    description: text('description'),
+    startDate: date('start_date').notNull(), // YYYY-MM-DD
+    endDate: date('end_date').notNull(), // YYYY-MM-DD
+    startTime: varchar('start_time', { length: 10 }), // e.g. "09:00"
+    endTime: varchar('end_time', { length: 10 }), // e.g. "17:00"
+    status: varchar('status', { length: 50 }).default('pending').notNull(), // 'pending' | 'completed'
+    createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('scheduler_tasks_dates_idx').on(table.startDate, table.endDate),
+    index('scheduler_tasks_status_idx').on(table.status),
+    index('scheduler_tasks_created_by_idx').on(table.createdBy),
+  ]
+);
+
 // Drizzle Relations
 export const usersRelations = relations(users, ({ many }) => ({
   userDepartments: many(userDepartments),
   createdProjects: many(projects),
   activities: many(dailyActivities),
   projectAssignments: many(projectAssignments),
+  schedulerTasks: many(schedulerTasks),
 }));
 
 export const departmentsRelations = relations(departments, ({ many }) => ({
@@ -260,6 +284,13 @@ export const digitalMarketingEntriesRelations = relations(digitalMarketingEntrie
   }),
 }));
 
+export const schedulerTasksRelations = relations(schedulerTasks, ({ one }) => ({
+  creator: one(users, {
+    fields: [schedulerTasks.createdBy],
+    references: [users.id],
+  }),
+}));
+
 // Types
 export type User = InferSelectModel<typeof users>;
 export type NewUser = InferInsertModel<typeof users>;
@@ -284,4 +315,7 @@ export type NewDigitalMarketingMonth = InferInsertModel<typeof digitalMarketingM
 
 export type DigitalMarketingEntry = InferSelectModel<typeof digitalMarketingEntries>;
 export type NewDigitalMarketingEntry = InferInsertModel<typeof digitalMarketingEntries>;
+
+export type SchedulerTask = InferSelectModel<typeof schedulerTasks>;
+export type NewSchedulerTask = InferInsertModel<typeof schedulerTasks>;
 

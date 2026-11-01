@@ -29,6 +29,13 @@
       "when": 1793543752495,
       "tag": "0003_purple_doctor_spectrum",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793548709551,
+      "tag": "0004_fast_moondragon",
+      "breakpoints": true
     }
   ]
 }

@@ -109,3 +109,50 @@ export async function deleteEmployee(req: Request, res: Response, next: NextFunc
   }
 }
 
+export async function getMonthlyActivity(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const employeeId = req.params.id;
+    const month = req.query.month ? parseInt(req.query.month as string, 10) : new Date().getMonth() + 1;
+    const year = req.query.year ? parseInt(req.query.year as string, 10) : new Date().getFullYear();
+
+    const data = await employeeService.getEmployeeMonthlyActivity(employeeId, month, year);
+    sendSuccess(res, data, 'Employee monthly activity preview retrieved');
+  } catch (error: any) {
+    if (error.status) {
+      sendError(res, error.message, error.status);
+    } else {
+      next(error);
+    }
+  }
+}
+
+export async function exportMonthlyActivity(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const employeeId = req.params.id;
+    const month = req.query.month ? parseInt(req.query.month as string, 10) : new Date().getMonth() + 1;
+    const year = req.query.year ? parseInt(req.query.year as string, 10) : new Date().getFullYear();
+
+    const { buffer, fileName } = await employeeService.exportEmployeeMonthlyActivityToExcel(
+      employeeId,
+      month,
+      year
+    );
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Length', buffer.length);
+    res.setHeader('Cache-Control', 'no-store');
+
+    res.send(buffer);
+  } catch (error: any) {
+    if (error.status) {
+      sendError(res, error.message, error.status);
+    } else {
+      next(error);
+    }
+  }
+}
+

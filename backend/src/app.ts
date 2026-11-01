@@ -17,6 +17,7 @@ import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
 import retentionRoutes from './modules/retention/retention.routes.js';
 import cronRoutes from './modules/cron/cron.routes.js';
 import digitalMarketingRoutes from './modules/digital-marketing/digital-marketing.routes.js';
+import schedulerRoutes from './modules/scheduler/scheduler.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -71,6 +72,7 @@ export function createApp(): Express {
   app.use('/api/attendance', attendanceRoutes);
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/digital-marketing', digitalMarketingRoutes);
+  app.use('/api/scheduler', schedulerRoutes);
   app.use('/api/admin/retention', retentionRoutes);
   app.use('/api/cron', cronRoutes);
 

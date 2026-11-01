@@ -37,6 +37,8 @@ router.get('/', requireManagerOrAdmin, controller.getEmployees);
 router.get('/:id', requireManagerOrAdmin, controller.getEmployee);
 
 // Admin-only management endpoints
+router.get('/:id/monthly-activity', requireAdmin, controller.getMonthlyActivity);
+router.get('/:id/monthly-activity/export', requireAdmin, controller.exportMonthlyActivity);
 router.post('/', requireAdmin, validateBody(createEmployeeSchema), controller.createEmployee);
 router.patch('/:id', requireAdmin, validateBody(updateEmployeeSchema), controller.updateEmployee);
 router.patch('/:id/status', requireAdmin, validateBody(updateStatusSchema), controller.updateEmployeeStatus);

@@ -1,10 +1,12 @@
-import React from 'react';
-import { Mail, Calendar, Building2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Mail, Calendar, Building2, Download, FileSpreadsheet } from 'lucide-react';
 import { Employee, Department } from '../../types';
 import { Modal } from '../common/Modal';
 import { Badge } from '../common/Badge';
+import { Button } from '../common/Button';
 import { Avatar } from '../common/Avatar';
 import { useData } from '../../context/DataContext';
+import { MonthlyActivityExportModal } from './MonthlyActivityExportModal';
 
 interface EmployeeDetailModalProps {
   employee: Employee | null;
@@ -20,6 +22,7 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({
   departments,
 }) => {
   const { activities, projects } = useData();
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   if (!employee) return null;
 
@@ -114,7 +117,28 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({
             <p className="text-xs text-slate-500 uppercase font-semibold mt-0.5">Projects</p>
           </div>
         </div>
+
+        {/* Export Monthly Activity Section */}
+        <div className="pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="md"
+            className="w-full justify-center bg-emerald-50/60 hover:bg-emerald-100/80 text-emerald-800 border-emerald-300 hover:border-emerald-400 font-bold shadow-2xs gap-2 py-2.5 rounded-xl cursor-pointer"
+            icon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
+            onClick={() => setIsExportModalOpen(true)}
+          >
+            Export Monthly Activity (.xlsx)
+          </Button>
+        </div>
       </div>
+
+      {/* Monthly Activity Export Modal */}
+      <MonthlyActivityExportModal
+        employee={employee}
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+      />
     </Modal>
   );
 };

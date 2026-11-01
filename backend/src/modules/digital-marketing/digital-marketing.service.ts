@@ -6,8 +6,9 @@ import {
   departments,
   users,
   userDepartments,
+  projectAssignments,
 } from '../../db/schema.js';
-import { eq, and, sql, desc, asc } from 'drizzle-orm';
+import { eq, and, or, sql, desc, asc, inArray } from 'drizzle-orm';
 import { formatDateIST } from '../../utils/date.js';
 import ExcelJS from 'exceljs';
 
@@ -74,7 +75,8 @@ export async function assertUserInDmDepartment(userId: string, isAdmin: boolean)
 export async function assertProjectAccess(
   projectId: string,
   userId: string,
-  isAdmin: boolean
+  isAdmin: boolean,
+  requireWrite: boolean = false
 ) {
   const [row] = await db
     .select({
@@ -104,17 +106,43 @@ export async function assertProjectAccess(
   }
 
   if (!isAdmin) {
-    await assertUserInDmDepartment(userId, isAdmin);
+    // 1. If user is the creator: full access
+    if (row.createdBy === userId) {
+      return { ...row, isOwner: true, isReadOnly: false };
+    }
 
-    if (row.createdBy !== userId) {
+    // 2. Check if user is an assigned Video Editor (read-only reference)
+    const [assignment] = await db
+      .select()
+      .from(projectAssignments)
+      .where(
+        and(
+          eq(projectAssignments.projectId, projectId),
+          eq(projectAssignments.userId, userId)
+        )
+      )
+      .limit(1);
+
+    if (!assignment) {
       throw {
         status: 403,
-        message: 'Access denied: You do not own this Digital Marketing project',
+        message: 'Access denied: You do not have access to this Digital Marketing project',
       };
     }
+
+    // Editors have read-only reference access: they cannot modify targets or entries
+    if (requireWrite) {
+      throw {
+        status: 403,
+        message:
+          'Access denied: Assigned Video Editors have read-only reference access and cannot modify targets or entries',
+      };
+    }
+
+    return { ...row, isOwner: false, isReadOnly: true, role: assignment.role };
   }
 
-  return row;
+  return { ...row, isOwner: true, isReadOnly: false };
 }
 
 /**
@@ -123,7 +151,8 @@ export async function assertProjectAccess(
 export async function assertMonthAccess(
   monthId: string,
   userId: string,
-  isAdmin: boolean
+  isAdmin: boolean,
+  requireWrite: boolean = false
 ) {
   const [month] = await db
     .select()
@@ -135,7 +164,7 @@ export async function assertMonthAccess(
     throw { status: 404, message: 'Monthly reporting record not found' };
   }
 
-  const project = await assertProjectAccess(month.projectId, userId, isAdmin);
+  const project = await assertProjectAccess(month.projectId, userId, isAdmin, requireWrite);
 
   return { month, project };
 }
@@ -146,7 +175,8 @@ export async function assertMonthAccess(
 export async function assertEntryAccess(
   entryId: string,
   userId: string,
-  isAdmin: boolean
+  isAdmin: boolean,
+  requireWrite: boolean = false
 ) {
   const [entry] = await db
     .select()
@@ -161,7 +191,8 @@ export async function assertEntryAccess(
   const { month, project } = await assertMonthAccess(
     entry.monthlyRecordId,
     userId,
-    isAdmin
+    isAdmin,
+    requireWrite
   );
 
   return { entry, month, project };
@@ -171,10 +202,6 @@ export async function assertEntryAccess(
  * 1. List Digital Marketing projects authorized for user
  */
 export async function listDmProjects(userId: string, isAdmin: boolean) {
-  if (!isAdmin) {
-    await assertUserInDmDepartment(userId, isAdmin);
-  }
-
   const [dmDept] = await db
     .select()
     .from(departments)
@@ -187,9 +214,25 @@ export async function listDmProjects(userId: string, isAdmin: boolean) {
 
   const conditions = [eq(projects.departmentId, dmDept.id)];
 
-  // Strict ownership restriction for employees
+  let assignedProjectIds: string[] = [];
   if (!isAdmin) {
-    conditions.push(eq(projects.createdBy, userId));
+    // Check projects user created, OR projects where user is assigned
+    const userAssignments = await db
+      .select({ projectId: projectAssignments.projectId })
+      .from(projectAssignments)
+      .where(eq(projectAssignments.userId, userId));
+    assignedProjectIds = userAssignments.map((a) => a.projectId);
+
+    if (assignedProjectIds.length > 0) {
+      conditions.push(
+        or(
+          eq(projects.createdBy, userId),
+          inArray(projects.id, assignedProjectIds)!
+        )!
+      );
+    } else {
+      conditions.push(eq(projects.createdBy, userId));
+    }
   }
 
   const rows = await db
@@ -211,6 +254,28 @@ export async function listDmProjects(userId: string, isAdmin: boolean) {
     .where(and(...conditions))
     .orderBy(desc(projects.createdAt));
 
+  const projectIds = rows.map((r) => r.id);
+  const assignmentsByProject = new Map<string, { id: string; fullName: string; username: string }[]>();
+
+  if (projectIds.length > 0) {
+    const allAssignments = await db
+      .select({
+        projectId: projectAssignments.projectId,
+        userId: users.id,
+        fullName: users.fullName,
+        username: users.username,
+      })
+      .from(projectAssignments)
+      .innerJoin(users, eq(projectAssignments.userId, users.id))
+      .where(inArray(projectAssignments.projectId, projectIds));
+
+    for (const a of allAssignments) {
+      const list = assignmentsByProject.get(a.projectId) || [];
+      list.push({ id: a.userId, fullName: a.fullName, username: a.username });
+      assignmentsByProject.set(a.projectId, list);
+    }
+  }
+
   return rows.map((r) => ({
     id: r.id,
     name: r.name,
@@ -222,6 +287,8 @@ export async function listDmProjects(userId: string, isAdmin: boolean) {
     description: r.description || '',
     status: r.status,
     createdAt: formatDateIST(r.createdAt) || '',
+    isAssigned: !isAdmin && r.createdBy !== userId && assignedProjectIds.includes(r.id),
+    assignedEditors: assignmentsByProject.get(r.id) || [],
   }));
 }
 
@@ -319,11 +386,28 @@ export async function getOrCreateProjectMonth(
       ? Math.min(100, Math.round((posterEntries.length / record.posterTarget) * 100))
       : 0;
 
+  // Fetch assigned editors for this project
+  const assignedEditors = await db
+    .select({
+      id: users.id,
+      fullName: users.fullName,
+      username: users.username,
+      email: users.email,
+    })
+    .from(projectAssignments)
+    .innerJoin(users, eq(projectAssignments.userId, users.id))
+    .where(eq(projectAssignments.projectId, projectId));
+
   return {
     project: {
       id: project.id,
       name: project.name,
       description: project.description,
+      createdBy: project.createdBy,
+      isOwner: isAdmin || project.createdBy === userId,
+      isReadOnly: !isAdmin && project.createdBy !== userId,
+      isAssigned: !isAdmin && project.createdBy !== userId,
+      assignedEditors,
     },
     monthRecord: {
       id: record.id,
@@ -372,7 +456,7 @@ export async function updateMonthlyTargets(
   userId: string,
   isAdmin: boolean
 ) {
-  const { month } = await assertMonthAccess(monthId, userId, isAdmin);
+  const { month } = await assertMonthAccess(monthId, userId, isAdmin, true);
 
   const updates: Record<string, any> = {
     updatedAt: new Date(),
@@ -458,7 +542,7 @@ export async function addEntry(
   userId: string,
   isAdmin: boolean
 ) {
-  await assertMonthAccess(monthId, userId, isAdmin);
+  await assertMonthAccess(monthId, userId, isAdmin, true);
 
   const [created] = await db
     .insert(digitalMarketingEntries)
@@ -511,7 +595,7 @@ export async function updateEntry(
   userId: string,
   isAdmin: boolean
 ) {
-  await assertEntryAccess(entryId, userId, isAdmin);
+  await assertEntryAccess(entryId, userId, isAdmin, true);
 
   const updates: Record<string, any> = {
     updatedAt: new Date(),
@@ -571,7 +655,7 @@ export async function deleteEntry(
   userId: string,
   isAdmin: boolean
 ) {
-  await assertEntryAccess(entryId, userId, isAdmin);
+  await assertEntryAccess(entryId, userId, isAdmin, true);
 
   await db
     .delete(digitalMarketingEntries)
@@ -921,3 +1005,155 @@ export async function exportMonthlyReportToExcel(
     projectName: project.name,
   };
 }
+
+/**
+ * 10. List active employees from the Video Editor department
+ */
+export async function listAssignableVideoEditors(userId: string, isAdmin: boolean) {
+  const [editorDept] = await db
+    .select()
+    .from(departments)
+    .where(eq(departments.slug, 'video-editor'))
+    .limit(1);
+
+  if (!editorDept) {
+    return [];
+  }
+
+  const rows = await db
+    .select({
+      id: users.id,
+      fullName: users.fullName,
+      username: users.username,
+      email: users.email,
+      role: users.role,
+    })
+    .from(users)
+    .innerJoin(userDepartments, eq(users.id, userDepartments.userId))
+    .where(
+      and(
+        eq(userDepartments.departmentId, editorDept.id),
+        eq(users.isActive, true)
+      )
+    );
+
+  return rows;
+}
+
+/**
+ * 11. Get current assigned editors for a project
+ */
+export async function getProjectAssignments(
+  projectId: string,
+  userId: string,
+  isAdmin: boolean
+) {
+  await assertProjectAccess(projectId, userId, isAdmin, false);
+
+  const assignments = await db
+    .select({
+      id: projectAssignments.id,
+      userId: users.id,
+      fullName: users.fullName,
+      username: users.username,
+      email: users.email,
+      role: projectAssignments.role,
+      assignedAt: projectAssignments.assignedAt,
+    })
+    .from(projectAssignments)
+    .innerJoin(users, eq(projectAssignments.userId, users.id))
+    .where(eq(projectAssignments.projectId, projectId));
+
+  return assignments.map((a) => ({
+    id: a.id,
+    userId: a.userId,
+    fullName: a.fullName,
+    username: a.username,
+    email: a.email,
+    role: a.role,
+    assignedAt: formatDateIST(a.assignedAt) || '',
+  }));
+}
+
+/**
+ * 12. Set / update assigned editors for a project
+ */
+export async function setProjectAssignments(
+  projectId: string,
+  userIds: string[],
+  userId: string,
+  isAdmin: boolean
+) {
+  // Only project creator or admin can manage assignments
+  await assertProjectAccess(projectId, userId, isAdmin, true);
+
+  if (userIds.length > 0) {
+    const [editorDept] = await db
+      .select()
+      .from(departments)
+      .where(eq(departments.slug, 'video-editor'))
+      .limit(1);
+
+    if (!editorDept) {
+      throw { status: 400, message: 'Video Editor department not found' };
+    }
+
+    const validEditors = await db
+      .select({ userId: userDepartments.userId })
+      .from(userDepartments)
+      .where(
+        and(
+          eq(userDepartments.departmentId, editorDept.id),
+          inArray(userDepartments.userId, userIds)
+        )
+      );
+
+    const validUserIds = new Set(validEditors.map((v) => v.userId));
+    for (const uid of userIds) {
+      if (!validUserIds.has(uid)) {
+        throw {
+          status: 400,
+          message: `User ${uid} is not assigned to the Video Editor department`,
+        };
+      }
+    }
+  }
+
+  // Current assignments in database
+  const currentAssignments = await db
+    .select({ userId: projectAssignments.userId })
+    .from(projectAssignments)
+    .where(eq(projectAssignments.projectId, projectId));
+
+  const currentUserIds = new Set(currentAssignments.map((a) => a.userId));
+  const targetUserIds = new Set(userIds);
+
+  // Remove unselected assignments
+  for (const currentUid of currentUserIds) {
+    if (!targetUserIds.has(currentUid)) {
+      await db
+        .delete(projectAssignments)
+        .where(
+          and(
+            eq(projectAssignments.projectId, projectId),
+            eq(projectAssignments.userId, currentUid)
+          )
+        );
+    }
+  }
+
+  // Add new assignments
+  for (const targetUid of targetUserIds) {
+    if (!currentUserIds.has(targetUid)) {
+      await db.insert(projectAssignments).values({
+        projectId,
+        userId: targetUid,
+        assignedBy: userId,
+        role: 'viewer', // Read-only reference access
+      });
+    }
+  }
+
+  return getProjectAssignments(projectId, userId, isAdmin);
+}
+

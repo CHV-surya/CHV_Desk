@@ -15,6 +15,13 @@
       "when": 1793536306993,
       "tag": "0001_chilly_cloak",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793538607237,
+      "tag": "0002_good_ink",
+      "breakpoints": true
     }
   ]
 }

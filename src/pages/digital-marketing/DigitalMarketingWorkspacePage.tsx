@@ -13,6 +13,7 @@ import {
   Loader2,
   Calendar,
   Layers,
+  Users,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
@@ -30,6 +31,7 @@ import { AddEntryModal } from '../../components/digital-marketing/AddEntryModal'
 import { EditEntryModal } from '../../components/digital-marketing/EditEntryModal';
 import { EditTargetsModal } from '../../components/digital-marketing/EditTargetsModal';
 import { AddProjectModal } from '../../components/projects/AddProjectModal';
+import { AssignEditorsModal } from '../../components/digital-marketing/AssignEditorsModal';
 import { Button } from '../../components/common/Button';
 
 export const DigitalMarketingWorkspacePage: React.FC = () => {
@@ -69,6 +71,7 @@ export const DigitalMarketingWorkspacePage: React.FC = () => {
   const [editingEntry, setEditingEntry] = useState<DigitalMarketingEntry | null>(null);
   const [isEditTargetsModalOpen, setIsEditTargetsModalOpen] = useState(false);
   const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 
   // Notification helper
   const showToast = (type: 'success' | 'error', message: string) => {
@@ -329,6 +332,25 @@ export const DigitalMarketingWorkspacePage: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            {/* Assign Editors Button (for creators and admin) */}
+            {workspaceData?.project && !workspaceData.project.isReadOnly && (
+              <button
+                type="button"
+                onClick={() => setIsAssignModalOpen(true)}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white/15 hover:bg-white/25 text-white border border-white/25 backdrop-blur-md transition-colors cursor-pointer shadow-xs"
+                title="Assign Video Editors for reference access"
+              >
+                <Users className="w-4 h-4" />
+                <span>Assign Video Editors</span>
+                {workspaceData.project.assignedEditors &&
+                  workspaceData.project.assignedEditors.length > 0 && (
+                    <span className="px-1.5 py-0.5 rounded-full bg-emerald-300 text-emerald-950 text-xs font-mono font-bold leading-none">
+                      {workspaceData.project.assignedEditors.length}
+                    </span>
+                  )}
+              </button>
+            )}
+
             {/* Create Project Button */}
             <button
               type="button"
@@ -382,13 +404,28 @@ export const DigitalMarketingWorkspacePage: React.FC = () => {
                 >
                   {dmProjects.map((proj) => (
                     <option key={proj.id} value={proj.id}>
-                      {proj.name}
+                      {proj.name} {proj.isAssigned ? '(Assigned Reference)' : ''}
                     </option>
                   ))}
                 </select>
-                <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-bold border border-emerald-200/60 hidden sm:inline-block">
-                  {dmProjects.length} Projects Available
-                </span>
+                {workspaceData?.project?.isAssigned ? (
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200">
+                    Assigned Viewer
+                  </span>
+                ) : (
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-bold border border-emerald-200/60 hidden sm:inline-block">
+                    {dmProjects.length} Projects Available
+                  </span>
+                )}
+                {workspaceData?.project?.assignedEditors &&
+                  workspaceData.project.assignedEditors.length > 0 &&
+                  !workspaceData.project.isAssigned && (
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 hidden md:inline-flex items-center gap-1">
+                      <Users className="w-3 h-3 text-purple-600" />
+                      {workspaceData.project.assignedEditors.length} Editor
+                      {workspaceData.project.assignedEditors.length > 1 ? 's' : ''} Assigned
+                    </span>
+                  )}
               </div>
             )}
           </div>
@@ -402,6 +439,23 @@ export const DigitalMarketingWorkspacePage: React.FC = () => {
           isLoading={isLoadingWorkspace}
         />
       </div>
+
+      {/* Read-Only Notice for Assigned Video Editors */}
+      {workspaceData?.project?.isReadOnly && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200/90 flex items-start gap-3 shadow-2xs">
+          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <h4 className="text-sm font-bold text-amber-900">
+              Read-Only Reference Mode (Assigned Video Editor)
+            </h4>
+            <p className="text-xs sm:text-sm text-amber-800 mt-0.5 font-medium leading-relaxed">
+              You have read-only reference access to this Digital Marketing project. You can review the monthly
+              production schedule, video shoot dates, and export monthly Excel spreadsheets. Monthly targets and
+              content deliverables can only be modified by the project creator or administrator.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* If No Projects Exist */}
       {dmProjects.length === 0 && !isLoadingProjects ? (
@@ -440,6 +494,7 @@ export const DigitalMarketingWorkspacePage: React.FC = () => {
             stats={workspaceData.stats}
             onEditTargets={() => setIsEditTargetsModalOpen(true)}
             isLoading={isLoadingWorkspace}
+            isReadOnly={workspaceData.project.isReadOnly}
           />
 
           {/* 4. SECTION 1: VIDEOS */}
@@ -456,6 +511,7 @@ export const DigitalMarketingWorkspacePage: React.FC = () => {
             onQuickUpdateStatus={handleQuickUpdateStatus}
             onDeleteEntry={handleDeleteEntry}
             isLoading={isLoadingWorkspace}
+            isReadOnly={workspaceData.project.isReadOnly}
           />
 
           {/* 5. SECTION 2: POSTERS */}
@@ -472,6 +528,7 @@ export const DigitalMarketingWorkspacePage: React.FC = () => {
             onQuickUpdateStatus={handleQuickUpdateStatus}
             onDeleteEntry={handleDeleteEntry}
             isLoading={isLoadingWorkspace}
+            isReadOnly={workspaceData.project.isReadOnly}
           />
         </>
       ) : null}
@@ -529,6 +586,20 @@ export const DigitalMarketingWorkspacePage: React.FC = () => {
           }
         }}
       />
+
+      {/* Assign Video Editors Modal */}
+      {workspaceData?.project && (
+        <AssignEditorsModal
+          isOpen={isAssignModalOpen}
+          onClose={() => setIsAssignModalOpen(false)}
+          projectId={workspaceData.project.id}
+          projectName={workspaceData.project.name}
+          onSaved={async () => {
+            showToast('success', 'Video editor assignments updated');
+            await Promise.all([fetchWorkspaceData(), fetchDmProjects()]);
+          }}
+        />
+      )}
     </div>
   );
 };

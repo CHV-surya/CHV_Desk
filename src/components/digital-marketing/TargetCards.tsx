@@ -6,12 +6,14 @@ interface TargetCardsProps {
   stats: DigitalMarketingStats;
   onEditTargets: () => void;
   isLoading?: boolean;
+  isReadOnly?: boolean;
 }
 
 export const TargetCards: React.FC<TargetCardsProps> = ({
   stats,
   onEditTargets,
   isLoading = false,
+  isReadOnly = false,
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
@@ -31,15 +33,17 @@ export const TargetCards: React.FC<TargetCardsProps> = ({
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onEditTargets}
-            disabled={isLoading}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:text-orange-600 hover:bg-orange-50/70 border border-slate-200 hover:border-orange-200 transition-colors cursor-pointer"
-          >
-            <Edit3 className="w-3.5 h-3.5" />
-            Edit Target
-          </button>
+          {!isReadOnly && (
+            <button
+              type="button"
+              onClick={onEditTargets}
+              disabled={isLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:text-orange-600 hover:bg-orange-50/70 border border-slate-200 hover:border-orange-200 transition-colors cursor-pointer"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              Edit Target
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-3 gap-3 mt-4 text-center">
@@ -107,15 +111,17 @@ export const TargetCards: React.FC<TargetCardsProps> = ({
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onEditTargets}
-            disabled={isLoading}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:text-emerald-600 hover:bg-emerald-50/70 border border-slate-200 hover:border-emerald-200 transition-colors cursor-pointer"
-          >
-            <Edit3 className="w-3.5 h-3.5" />
-            Edit Target
-          </button>
+          {!isReadOnly && (
+            <button
+              type="button"
+              onClick={onEditTargets}
+              disabled={isLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:text-emerald-600 hover:bg-emerald-50/70 border border-slate-200 hover:border-emerald-200 transition-colors cursor-pointer"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              Edit Target
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-3 gap-3 mt-4 text-center">
@@ -169,3 +175,4 @@ export const TargetCards: React.FC<TargetCardsProps> = ({
     </div>
   );
 };
+

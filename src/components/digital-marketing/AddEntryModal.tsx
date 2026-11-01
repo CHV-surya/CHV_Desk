@@ -244,3 +244,4 @@ export const AddEntryModal: React.FC<AddEntryModalProps> = ({
     </Modal>
   );
 };
+

@@ -133,3 +133,4 @@ export const EditTargetsModal: React.FC<EditTargetsModalProps> = ({
     </Modal>
   );
 };
+

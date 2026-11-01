@@ -41,6 +41,13 @@ const updateEntrySchema = z.object({
   adCampaignReportUrl: z.string().nullable().optional(),
 });
 
+const updateAssignmentsSchema = z.object({
+  userIds: z.array(z.string().uuid('Valid user ID is required')),
+});
+
+// Video Editors for assignment
+router.get('/video-editors', controller.getVideoEditors);
+
 // Projects
 router.get('/projects', controller.getProjects);
 router.get('/projects/:projectId/months', controller.getProjectMonths);
@@ -49,6 +56,12 @@ router.post(
   '/projects/:projectId/months',
   validateBody(createMonthSchema),
   controller.createProjectMonth
+);
+router.get('/projects/:projectId/assignments', controller.getProjectAssignments);
+router.put(
+  '/projects/:projectId/assignments',
+  validateBody(updateAssignmentsSchema),
+  controller.setProjectAssignments
 );
 
 // Monthly Targets & Entries
@@ -77,3 +90,4 @@ router.get('/months/:monthId/export', controller.exportMonthlyReport);
 router.post('/months/:monthId/export', controller.exportMonthlyReport);
 
 export default router;
+

@@ -78,6 +78,28 @@ export const projects = pgTable('projects', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+// 4b. Project Assignments Table (Multi-assignee / Video Editor assignments)
+export const projectAssignments = pgTable(
+  'project_assignments',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    projectId: uuid('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    assignedBy: uuid('assigned_by').references(() => users.id, { onDelete: 'set null' }),
+    role: varchar('role', { length: 50 }).default('viewer').notNull(), // 'viewer' = read-only reference
+    assignedAt: timestamp('assigned_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex('project_user_assignment_unique_idx').on(table.projectId, table.userId),
+    index('project_assignments_project_idx').on(table.projectId),
+    index('project_assignments_user_idx').on(table.userId),
+  ]
+);
+
 // 5. Daily Activities Table
 export const dailyActivities = pgTable(
   'daily_activities',
@@ -155,6 +177,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   userDepartments: many(userDepartments),
   createdProjects: many(projects),
   activities: many(dailyActivities),
+  projectAssignments: many(projectAssignments),
 }));
 
 export const departmentsRelations = relations(departments, ({ many }) => ({
@@ -185,6 +208,22 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   }),
   activities: many(dailyActivities),
   digitalMarketingMonths: many(digitalMarketingMonths),
+  assignments: many(projectAssignments),
+}));
+
+export const projectAssignmentsRelations = relations(projectAssignments, ({ one }) => ({
+  project: one(projects, {
+    fields: [projectAssignments.projectId],
+    references: [projects.id],
+  }),
+  user: one(users, {
+    fields: [projectAssignments.userId],
+    references: [users.id],
+  }),
+  assigner: one(users, {
+    fields: [projectAssignments.assignedBy],
+    references: [users.id],
+  }),
 }));
 
 export const dailyActivitiesRelations = relations(dailyActivities, ({ one }) => ({
@@ -233,6 +272,9 @@ export type NewUserDepartment = InferInsertModel<typeof userDepartments>;
 
 export type Project = InferSelectModel<typeof projects>;
 export type NewProject = InferInsertModel<typeof projects>;
+
+export type ProjectAssignment = InferSelectModel<typeof projectAssignments>;
+export type NewProjectAssignment = InferInsertModel<typeof projectAssignments>;
 
 export type DailyActivity = InferSelectModel<typeof dailyActivities>;
 export type NewDailyActivity = InferInsertModel<typeof dailyActivities>;

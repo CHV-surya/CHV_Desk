@@ -27,6 +27,7 @@ interface ContentSectionTableProps {
   ) => void;
   onDeleteEntry: (entryId: string) => void | Promise<void>;
   isLoading?: boolean;
+  isReadOnly?: boolean;
 }
 
 export const ContentSectionTable: React.FC<ContentSectionTableProps> = ({
@@ -39,6 +40,7 @@ export const ContentSectionTable: React.FC<ContentSectionTableProps> = ({
   onQuickUpdateStatus,
   onDeleteEntry,
   isLoading = false,
+  isReadOnly = false,
 }) => {
   const [deleteCandidate, setDeleteCandidate] = useState<DigitalMarketingEntry | null>(
     null
@@ -52,6 +54,22 @@ export const ContentSectionTable: React.FC<ContentSectionTableProps> = ({
     field: 'videoShoot' | 'editing' | 'clientConfirmation' | 'scheduled',
     currentVal: boolean | null
   ) => {
+    if (isReadOnly) {
+      return (
+        <span
+          className={`inline-block px-2.5 py-0.5 rounded-lg text-xs font-bold border ${
+            currentVal === true
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+              : currentVal === false
+              ? 'bg-rose-50 text-rose-700 border-rose-300'
+              : 'bg-slate-50 text-slate-400 border-slate-200'
+          }`}
+        >
+          {currentVal === true ? 'YES' : currentVal === false ? 'NO' : '-'}
+        </span>
+      );
+    }
+
     return (
       <select
         value={currentVal === true ? 'YES' : currentVal === false ? 'NO' : 'NONE'}
@@ -97,15 +115,17 @@ export const ContentSectionTable: React.FC<ContentSectionTableProps> = ({
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={onAddEntry}
-          disabled={isLoading}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-white text-orange-600 hover:bg-orange-50 active:bg-orange-100 shadow-sm transition-all cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          Add {contentType === 'video' ? 'Video' : 'Poster'}
-        </button>
+        {!isReadOnly && (
+          <button
+            type="button"
+            onClick={onAddEntry}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-white text-orange-600 hover:bg-orange-50 active:bg-orange-100 shadow-sm transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            Add {contentType === 'video' ? 'Video' : 'Poster'}
+          </button>
+        )}
       </div>
 
       {/* Spreadsheet Table */}
@@ -125,13 +145,13 @@ export const ContentSectionTable: React.FC<ContentSectionTableProps> = ({
               <th className="py-3.5 px-3.5 text-center min-w-[110px]">Scheduled</th>
               <th className="py-3.5 px-3.5 text-center min-w-[130px]">Date</th>
               <th className="py-3.5 px-4 min-w-[220px]">Ad Campaign Report</th>
-              <th className="py-3.5 px-5 text-right min-w-[100px]">Actions</th>
+              {!isReadOnly && <th className="py-3.5 px-5 text-right min-w-[100px]">Actions</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {entries.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-14 text-center text-slate-400">
+                <td colSpan={isReadOnly ? 7 : 8} className="py-14 text-center text-slate-400">
                   <div className="flex flex-col items-center justify-center">
                     <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-400 mb-3 shadow-2xs">
                       <Sparkles className="w-6 h-6 text-orange-400" />
@@ -142,15 +162,17 @@ export const ContentSectionTable: React.FC<ContentSectionTableProps> = ({
                     <p className="text-xs text-slate-400 mt-1 max-w-sm font-medium">
                       Plan your monthly content deliverables and track production workflow.
                     </p>
-                    <button
-                      type="button"
-                      onClick={onAddEntry}
-                      disabled={isLoading}
-                      className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-orange-600 text-white hover:bg-orange-700 transition-colors cursor-pointer shadow-xs"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add First {contentType === 'video' ? 'Video' : 'Poster'}
-                    </button>
+                    {!isReadOnly && (
+                      <button
+                        type="button"
+                        onClick={onAddEntry}
+                        disabled={isLoading}
+                        className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-orange-600 text-white hover:bg-orange-700 transition-colors cursor-pointer shadow-xs"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add First {contentType === 'video' ? 'Video' : 'Poster'}
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -246,28 +268,30 @@ export const ContentSectionTable: React.FC<ContentSectionTableProps> = ({
                     </td>
 
                     {/* 8. Actions */}
-                    <td className="py-3.5 px-5 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => onEditEntry(entry)}
-                          disabled={isLoading}
-                          title="Edit Entry"
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 border border-transparent hover:border-blue-200 transition-colors cursor-pointer"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeleteCandidate(entry)}
-                          disabled={isLoading}
-                          title="Delete Entry"
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
+                    {!isReadOnly && (
+                      <td className="py-3.5 px-5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => onEditEntry(entry)}
+                            disabled={isLoading}
+                            title="Edit Entry"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 border border-transparent hover:border-blue-200 transition-colors cursor-pointer"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteCandidate(entry)}
+                            disabled={isLoading}
+                            title="Delete Entry"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 );
               })
@@ -294,3 +318,4 @@ export const ContentSectionTable: React.FC<ContentSectionTableProps> = ({
     </div>
   );
 };
+

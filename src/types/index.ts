@@ -38,6 +38,8 @@ export interface Project {
   createdAt: string;
   status: 'active' | 'completed' | 'on-hold';
   description?: string;
+  isAssigned?: boolean;
+  assignedEditors?: { id: string; fullName: string; username: string }[];
 }
 
 export interface DailyActivity {
@@ -113,6 +115,10 @@ export interface DigitalMarketingWorkspaceData {
     id: string;
     name: string;
     description?: string;
+    isOwner?: boolean;
+    isReadOnly?: boolean;
+    isAssigned?: boolean;
+    assignedEditors?: { id: string; fullName: string; username: string; email?: string }[];
   };
   monthRecord: DigitalMarketingMonthRecord;
   stats: DigitalMarketingStats;

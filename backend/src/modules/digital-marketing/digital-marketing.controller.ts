@@ -299,3 +299,85 @@ export async function exportMonthlyReport(
     }
   }
 }
+
+/**
+ * GET /api/digital-marketing/video-editors
+ */
+export async function getVideoEditors(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const userId = req.user!.userId;
+    const isAdmin = req.user!.role === 'admin';
+
+    const editors = await dmService.listAssignableVideoEditors(userId, isAdmin);
+    sendSuccess(res, editors, 'Assignable video editors retrieved');
+  } catch (error: any) {
+    if (error.status) {
+      sendError(res, error.message, error.status);
+    } else {
+      next(error);
+    }
+  }
+}
+
+/**
+ * GET /api/digital-marketing/projects/:projectId/assignments
+ */
+export async function getProjectAssignments(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { projectId } = req.params;
+    const userId = req.user!.userId;
+    const isAdmin = req.user!.role === 'admin';
+
+    const assignments = await dmService.getProjectAssignments(
+      projectId,
+      userId,
+      isAdmin
+    );
+    sendSuccess(res, assignments, 'Project assignments retrieved');
+  } catch (error: any) {
+    if (error.status) {
+      sendError(res, error.message, error.status);
+    } else {
+      next(error);
+    }
+  }
+}
+
+/**
+ * PUT /api/digital-marketing/projects/:projectId/assignments
+ */
+export async function setProjectAssignments(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { projectId } = req.params;
+    const { userIds } = req.body;
+    const userId = req.user!.userId;
+    const isAdmin = req.user!.role === 'admin';
+
+    const updated = await dmService.setProjectAssignments(
+      projectId,
+      userIds,
+      userId,
+      isAdmin
+    );
+    sendSuccess(res, updated, 'Project editor assignments updated successfully');
+  } catch (error: any) {
+    if (error.status) {
+      sendError(res, error.message, error.status);
+    } else {
+      next(error);
+    }
+  }
+}
+

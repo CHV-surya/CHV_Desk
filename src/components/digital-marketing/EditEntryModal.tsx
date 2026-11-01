@@ -249,3 +249,4 @@ export const EditEntryModal: React.FC<EditEntryModalProps> = ({
     </Modal>
   );
 };
+

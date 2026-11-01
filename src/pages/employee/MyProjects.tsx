@@ -17,7 +17,9 @@ export const MyProjects: React.FC = () => {
   const activeDept = departments.find((d) => d.id === activeDepartmentId);
 
   const departmentProjects = projects.filter(
-    (p) => p.departmentId === activeDepartmentId && (!currentUser || p.createdBy === currentUser.id)
+    (p) =>
+      (p.departmentId === activeDepartmentId && (!currentUser || p.createdBy === currentUser.id)) ||
+      Boolean(p.isAssigned)
   );
 
   const filteredProjects = departmentProjects.filter((p) =>

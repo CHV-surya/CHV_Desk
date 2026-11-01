@@ -94,6 +94,13 @@ export const api = {
     });
   },
 
+  put: <T = any>(endpoint: string, body?: any) => {
+    return request<T>(endpoint, {
+      method: 'PUT',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  },
+
   patch: <T = any>(endpoint: string, body?: any) => {
     return request<T>(endpoint, {
       method: 'PATCH',

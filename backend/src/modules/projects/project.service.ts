@@ -1,6 +1,6 @@
 import { db } from '../../db/index.js';
-import { projects, departments, users, userDepartments } from '../../db/schema.js';
-import { eq, and, sql, desc, or } from 'drizzle-orm';
+import { projects, departments, users, userDepartments, projectAssignments } from '../../db/schema.js';
+import { eq, and, sql, desc, or, inArray } from 'drizzle-orm';
 import { formatDateIST } from '../../utils/date.js';
 
 export interface ProjectFilters {
@@ -19,11 +19,36 @@ export async function listProjects(filters: ProjectFilters) {
   const conditions = [];
 
   // Employee project visibility rule:
-  // Non-admin employees can ONLY see projects they personally created
-  if (!isAdmin) {
-    conditions.push(eq(projects.createdBy, userId));
-    if (departmentId && departmentId !== 'all') {
-      conditions.push(eq(projects.departmentId, departmentId));
+  // Non-admin employees can see projects they personally created, OR projects they are assigned to
+  let assignedProjectIds: string[] = [];
+  if (!isAdmin && userId) {
+    const userAssignments = await db
+      .select({ projectId: projectAssignments.projectId })
+      .from(projectAssignments)
+      .where(eq(projectAssignments.userId, userId));
+    assignedProjectIds = userAssignments.map((a) => a.projectId);
+
+    if (assignedProjectIds.length > 0) {
+      if (departmentId && departmentId !== 'all') {
+        conditions.push(
+          or(
+            and(eq(projects.createdBy, userId), eq(projects.departmentId, departmentId)),
+            inArray(projects.id, assignedProjectIds)!
+          )!
+        );
+      } else {
+        conditions.push(
+          or(
+            eq(projects.createdBy, userId),
+            inArray(projects.id, assignedProjectIds)!
+          )!
+        );
+      }
+    } else {
+      conditions.push(eq(projects.createdBy, userId));
+      if (departmentId && departmentId !== 'all') {
+        conditions.push(eq(projects.departmentId, departmentId));
+      }
     }
   } else {
     // Admin can view all projects across all departments, or filter by specific department
@@ -66,6 +91,28 @@ export async function listProjects(filters: ProjectFilters) {
 
   const rows = await query;
 
+  const projectIds = rows.map((r) => r.id);
+  const assignmentsByProject = new Map<string, { id: string; fullName: string; username: string }[]>();
+
+  if (projectIds.length > 0) {
+    const allAssignments = await db
+      .select({
+        projectId: projectAssignments.projectId,
+        userId: users.id,
+        fullName: users.fullName,
+        username: users.username,
+      })
+      .from(projectAssignments)
+      .innerJoin(users, eq(projectAssignments.userId, users.id))
+      .where(inArray(projectAssignments.projectId, projectIds));
+
+    for (const a of allAssignments) {
+      const list = assignmentsByProject.get(a.projectId) || [];
+      list.push({ id: a.userId, fullName: a.fullName, username: a.username });
+      assignmentsByProject.set(a.projectId, list);
+    }
+  }
+
   return rows.map((r) => ({
     id: r.id,
     name: r.name,
@@ -77,6 +124,8 @@ export async function listProjects(filters: ProjectFilters) {
     description: r.description || '',
     status: r.status,
     createdAt: formatDateIST(r.createdAt) || '',
+    isAssigned: !isAdmin && r.createdBy !== userId && assignedProjectIds.includes(r.id),
+    assignedEditors: assignmentsByProject.get(r.id) || [],
   }));
 }
 
@@ -105,10 +154,35 @@ export async function getProjectById(id: string, userId?: string, isAdmin: boole
     throw { status: 404, message: 'Project not found' };
   }
 
-  // Strict ownership check: Non-admin employees can only view projects they personally created
+  // Strict ownership check: Non-admin employees can only view projects they personally created OR are assigned to
+  let isAssigned = false;
   if (userId && !isAdmin && row.createdBy !== userId) {
-    throw { status: 403, message: 'You do not have permission to view this project' };
+    const [assignment] = await db
+      .select()
+      .from(projectAssignments)
+      .where(
+        and(
+          eq(projectAssignments.projectId, id),
+          eq(projectAssignments.userId, userId)
+        )
+      )
+      .limit(1);
+
+    if (!assignment) {
+      throw { status: 403, message: 'You do not have permission to view this project' };
+    }
+    isAssigned = true;
   }
+
+  const assignedEditors = await db
+    .select({
+      id: users.id,
+      fullName: users.fullName,
+      username: users.username,
+    })
+    .from(projectAssignments)
+    .innerJoin(users, eq(projectAssignments.userId, users.id))
+    .where(eq(projectAssignments.projectId, id));
 
   return {
     id: row.id,
@@ -121,6 +195,8 @@ export async function getProjectById(id: string, userId?: string, isAdmin: boole
     description: row.description || '',
     status: row.status,
     createdAt: formatDateIST(row.createdAt) || '',
+    isAssigned,
+    assignedEditors,
   };
 }
 

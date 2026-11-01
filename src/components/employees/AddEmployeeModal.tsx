@@ -65,7 +65,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     }
 
     if (assignedDepartments.length === 0) {
-      setError('Please assign at least one department to the employee.');
+      setError('Please assign at least one department.');
       return;
     }
 
@@ -113,8 +113,12 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
         resetForm();
         onClose();
       }}
-      title="Add New Employee"
-      subtitle="Register an employee and configure department permissions"
+      title="Add New Member"
+      subtitle={
+        role === 'manager'
+          ? 'Register a manager and configure supervised department permissions'
+          : 'Register an employee and configure department permissions'
+      }
       maxWidth="md"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -125,6 +129,72 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
           </div>
         )}
 
+        {/* Role Selection (Prominently placed near the top before Full Name) */}
+        <div>
+          <label className="block text-xs font-bold text-slate-700 mb-1.5">
+            Role Selection <span className="text-rose-500">*</span>
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setRole('employee')}
+              className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                role === 'employee'
+                  ? 'border-blue-500 bg-blue-50/80 text-blue-950 ring-2 ring-blue-500/20 shadow-xs'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+              }`}
+            >
+              <div
+                className={`w-4 h-4 rounded-full mt-0.5 flex items-center justify-center border flex-shrink-0 ${
+                  role === 'employee'
+                    ? 'border-blue-600 bg-blue-600 text-white'
+                    : 'border-slate-300 bg-white'
+                }`}
+              >
+                {role === 'employee' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+              </div>
+              <div className="min-w-0">
+                <div className="font-bold text-sm text-slate-900 leading-tight">Employee</div>
+                <div className="text-xs text-slate-500 mt-0.5 font-medium leading-snug">
+                  Department team member & task execution
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setRole('manager')}
+              className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                role === 'manager'
+                  ? 'border-indigo-500 bg-indigo-50/80 text-indigo-950 ring-2 ring-indigo-500/20 shadow-xs'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+              }`}
+            >
+              <div
+                className={`w-4 h-4 rounded-full mt-0.5 flex items-center justify-center border flex-shrink-0 ${
+                  role === 'manager'
+                    ? 'border-indigo-600 bg-indigo-600 text-white'
+                    : 'border-slate-300 bg-white'
+                }`}
+              >
+                {role === 'manager' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+              </div>
+              <div className="min-w-0">
+                <div className="font-bold text-sm text-slate-900 leading-tight flex items-center gap-1.5">
+                  Manager
+                  <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 font-bold leading-none">
+                    MANAGER
+                  </span>
+                </div>
+                <div className="text-xs text-slate-500 mt-0.5 font-medium leading-snug">
+                  Supervises departments & assigns projects
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Full Name & Username */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
@@ -238,42 +308,6 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
           </div>
         </div>
 
-        {/* User Role */}
-        <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1.5">User Role & Privileges</label>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => setRole('employee')}
-              className={`p-3 rounded-xl border text-left transition-all ${
-                role === 'employee'
-                  ? 'border-blue-500 bg-blue-50/70 text-blue-900 shadow-xs'
-                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              <div className="font-bold text-sm">Employee</div>
-              <div className="text-xs text-slate-500 mt-0.5">Specialist access to department workspace</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole('manager')}
-              className={`p-3 rounded-xl border text-left transition-all ${
-                role === 'manager'
-                  ? 'border-indigo-500 bg-indigo-50/70 text-indigo-900 shadow-xs'
-                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              <div className="font-bold text-sm flex items-center gap-1.5">
-                Manager
-                <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-700 font-bold">
-                  NEW
-                </span>
-              </div>
-              <div className="text-xs text-slate-500 mt-0.5">Workspace supervisor & project assigner</div>
-            </button>
-          </div>
-        </div>
-
         {/* Account Status */}
         <div>
           <label className="block text-xs font-bold text-slate-700 mb-1.5">Account Status</label>
@@ -318,7 +352,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
             Cancel
           </Button>
           <Button type="submit" variant="primary" size="md" isLoading={isSubmitting}>
-            Create Employee
+            {role === 'manager' ? 'Create Manager' : 'Create Employee'}
           </Button>
         </div>
       </form>

@@ -100,7 +100,7 @@ export const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Edit Employee Account"
+      title="Edit Account Details"
       subtitle={`Configure identity and departments for ${employee.fullName}`}
       maxWidth="md"
     >
@@ -109,6 +109,73 @@ export const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
           <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-sm font-semibold flex items-center gap-2.5">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{error}</span>
+          </div>
+        )}
+
+        {/* Role Selection (Prominently placed near the top before Full Name for non-admin accounts) */}
+        {employee.role !== 'admin' && (
+          <div>
+            <label className="block text-xs sm:text-[13px] font-bold text-slate-700 mb-1.5">
+              Role Selection <span className="text-rose-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setRole('employee')}
+                className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  role === 'employee'
+                    ? 'border-blue-500 bg-blue-50/80 text-blue-950 ring-2 ring-blue-500/20 shadow-xs'
+                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full mt-0.5 flex items-center justify-center border flex-shrink-0 ${
+                    role === 'employee'
+                      ? 'border-blue-600 bg-blue-600 text-white'
+                      : 'border-slate-300 bg-white'
+                  }`}
+                >
+                  {role === 'employee' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                </div>
+                <div className="min-w-0">
+                  <div className="font-bold text-sm text-slate-900 leading-tight">Employee</div>
+                  <div className="text-xs text-slate-500 mt-0.5 font-medium leading-snug">
+                    Department team member & task execution
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRole('manager')}
+                className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  role === 'manager'
+                    ? 'border-indigo-500 bg-indigo-50/80 text-indigo-950 ring-2 ring-indigo-500/20 shadow-xs'
+                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full mt-0.5 flex items-center justify-center border flex-shrink-0 ${
+                    role === 'manager'
+                      ? 'border-indigo-600 bg-indigo-600 text-white'
+                    : 'border-slate-300 bg-white'
+                }`}
+              >
+                  {role === 'manager' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                </div>
+                <div className="min-w-0">
+                  <div className="font-bold text-sm text-slate-900 leading-tight flex items-center gap-1.5">
+                    Manager
+                    <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 font-bold leading-none">
+                      MANAGER
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-500 mt-0.5 font-medium leading-snug">
+                    Supervises departments & assigns projects
+                  </div>
+                </div>
+              </button>
+            </div>
           </div>
         )}
 
@@ -169,6 +236,7 @@ export const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         <div>
           <label className="block text-xs sm:text-[13px] font-bold text-slate-700 mb-1.5">
             Department Assignment <span className="text-rose-500">*</span>
+            <span className="font-normal text-slate-400 ml-1.5">(Multi-select enabled)</span>
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             {departments.map((dept) => {
@@ -205,44 +273,6 @@ export const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
             })}
           </div>
         </div>
-
-        {/* User Role */}
-        {employee.role !== 'admin' && (
-          <div>
-            <label className="block text-xs sm:text-[13px] font-bold text-slate-700 mb-1.5">User Role & Privileges</label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setRole('employee')}
-                className={`p-3 rounded-xl border text-left transition-all ${
-                  role === 'employee'
-                    ? 'border-blue-500 bg-blue-50/70 text-blue-900 shadow-xs'
-                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <div className="font-bold text-sm">Employee</div>
-                <div className="text-xs text-slate-500 mt-0.5">Specialist access</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole('manager')}
-                className={`p-3 rounded-xl border text-left transition-all ${
-                  role === 'manager'
-                    ? 'border-indigo-500 bg-indigo-50/70 text-indigo-900 shadow-xs'
-                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <div className="font-bold text-sm flex items-center gap-1.5">
-                  Manager
-                  <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-700 font-bold">
-                    MANAGER
-                  </span>
-                </div>
-                <div className="text-xs text-slate-500 mt-0.5">Workspace supervisor</div>
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Account Status Toggle */}
         <div>

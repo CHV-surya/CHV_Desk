@@ -7,6 +7,7 @@ export async function getProjects(req: Request, res: Response, next: NextFunctio
     const { departmentId, search, page, limit } = req.query;
     const userId = req.user!.userId;
     const isAdmin = req.user!.role === 'admin';
+    const userRole = req.user!.role;
 
     const projects = await projectService.listProjects({
       departmentId: departmentId as string,
@@ -15,6 +16,7 @@ export async function getProjects(req: Request, res: Response, next: NextFunctio
       limit: limit ? parseInt(limit as string, 10) : 100,
       userId,
       isAdmin,
+      userRole,
     });
 
     sendSuccess(res, projects, 'Projects retrieved successfully');
@@ -31,7 +33,8 @@ export async function getProject(req: Request, res: Response, next: NextFunction
   try {
     const userId = req.user!.userId;
     const isAdmin = req.user!.role === 'admin';
-    const project = await projectService.getProjectById(req.params.id, userId, isAdmin);
+    const userRole = req.user!.role;
+    const project = await projectService.getProjectById(req.params.id, userId, isAdmin, userRole);
     sendSuccess(res, project, 'Project details retrieved');
   } catch (error: any) {
     if (error.status) {
@@ -93,6 +96,61 @@ export async function deleteProject(req: Request, res: Response, next: NextFunct
     const isAdmin = req.user!.role === 'admin';
     const result = await projectService.deleteProject(req.params.id, isAdmin);
     sendSuccess(res, result, result.message);
+  } catch (error: any) {
+    if (error.status) {
+      sendError(res, error.message, error.status);
+    } else {
+      next(error);
+    }
+  }
+}
+
+export async function getAssignableEmployees(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = req.user!.userId;
+    const isAdmin = req.user!.role === 'admin';
+    const userRole = req.user!.role;
+    const assignables = await projectService.listAssignableEmployees(req.params.id, userId, isAdmin, userRole);
+    sendSuccess(res, assignables, 'Assignable employees retrieved');
+  } catch (error: any) {
+    if (error.status) {
+      sendError(res, error.message, error.status);
+    } else {
+      next(error);
+    }
+  }
+}
+
+export async function getProjectAssignments(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = req.user!.userId;
+    const isAdmin = req.user!.role === 'admin';
+    const userRole = req.user!.role;
+    const assignments = await projectService.getProjectAssignments(req.params.id, userId, isAdmin, userRole);
+    sendSuccess(res, assignments, 'Project assignments retrieved');
+  } catch (error: any) {
+    if (error.status) {
+      sendError(res, error.message, error.status);
+    } else {
+      next(error);
+    }
+  }
+}
+
+export async function setProjectAssignments(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { userIds } = req.body;
+    const userId = req.user!.userId;
+    const isAdmin = req.user!.role === 'admin';
+    const userRole = req.user!.role;
+    const assignments = await projectService.setProjectAssignments(
+      req.params.id,
+      userIds,
+      userId,
+      isAdmin,
+      userRole
+    );
+    sendSuccess(res, assignments, 'Project assignments updated successfully');
   } catch (error: any) {
     if (error.status) {
       sendError(res, error.message, error.status);

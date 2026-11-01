@@ -18,6 +18,20 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
   next();
 }
 
+export function requireManagerOrAdmin(req: Request, res: Response, next: NextFunction): void {
+  if (!req.user) {
+    sendError(res, 'Authentication required', 401);
+    return;
+  }
+
+  if (req.user.role !== 'admin' && req.user.role !== 'manager') {
+    sendError(res, 'Access denied. Manager or Administrator privileges required.', 403);
+    return;
+  }
+
+  next();
+}
+
 export function requireEmployee(req: Request, res: Response, next: NextFunction): void {
   if (!req.user) {
     sendError(res, 'Authentication required', 401);

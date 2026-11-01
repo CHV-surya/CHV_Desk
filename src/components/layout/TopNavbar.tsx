@@ -566,6 +566,8 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onToggleSidebar }) => {
               <div className="text-xs text-slate-500 font-medium mt-0.5">
                 {currentUser?.role === 'admin'
                   ? 'Administrator'
+                  : currentUser?.role === 'manager'
+                  ? `Manager · ${departments.find((d) => d.id === activeDepartmentId)?.name || 'Lead'}`
                   : departments.find((d) => d.id === activeDepartmentId)?.name || 'Specialist'}
               </div>
             </div>

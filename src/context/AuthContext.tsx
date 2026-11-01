@@ -10,6 +10,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   setActiveDepartmentId: (deptId: string) => void;
   isAdmin: boolean;
+  isManager: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -141,6 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const isAdmin = currentUser?.role === 'admin';
+  const isManager = currentUser?.role === 'manager';
 
   return (
     <AuthContext.Provider
@@ -152,6 +154,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         setActiveDepartmentId,
         isAdmin,
+        isManager,
       }}
     >
       {children}

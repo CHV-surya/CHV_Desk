@@ -26,6 +26,7 @@ export const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [role, setRole] = useState<'admin' | 'manager' | 'employee'>('employee');
   const [assignedDepartments, setAssignedDepartments] = useState<string[]>([]);
   const [status, setStatus] = useState<'active' | 'inactive'>('active');
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +37,7 @@ export const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       setFullName(employee.fullName);
       setUsername(employee.username);
       setEmail(employee.email || '');
+      setRole(employee.role);
       setAssignedDepartments(employee.assignedDepartments || []);
       setStatus(employee.status);
       setNewPassword('');
@@ -70,6 +72,7 @@ export const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       fullName: fullName.trim(),
       username: username.trim().toLowerCase(),
       email: email.trim(),
+      role,
       assignedDepartments,
       status,
     };
@@ -202,6 +205,44 @@ export const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
             })}
           </div>
         </div>
+
+        {/* User Role */}
+        {employee.role !== 'admin' && (
+          <div>
+            <label className="block text-xs sm:text-[13px] font-bold text-slate-700 mb-1.5">User Role & Privileges</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setRole('employee')}
+                className={`p-3 rounded-xl border text-left transition-all ${
+                  role === 'employee'
+                    ? 'border-blue-500 bg-blue-50/70 text-blue-900 shadow-xs'
+                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <div className="font-bold text-sm">Employee</div>
+                <div className="text-xs text-slate-500 mt-0.5">Specialist access</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole('manager')}
+                className={`p-3 rounded-xl border text-left transition-all ${
+                  role === 'manager'
+                    ? 'border-indigo-500 bg-indigo-50/70 text-indigo-900 shadow-xs'
+                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <div className="font-bold text-sm flex items-center gap-1.5">
+                  Manager
+                  <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-700 font-bold">
+                    MANAGER
+                  </span>
+                </div>
+                <div className="text-xs text-slate-500 mt-0.5">Workspace supervisor</div>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Account Status Toggle */}
         <div>

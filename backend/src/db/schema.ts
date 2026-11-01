@@ -14,7 +14,7 @@ import {
 import { relations, InferSelectModel, InferInsertModel } from 'drizzle-orm';
 
 // Enums
-export const userRoleEnum = pgEnum('user_role', ['admin', 'employee']);
+export const userRoleEnum = pgEnum('user_role', ['admin', 'manager', 'employee']);
 export const activityStatusEnum = pgEnum('activity_status', [
   'not_joined',
   'working',

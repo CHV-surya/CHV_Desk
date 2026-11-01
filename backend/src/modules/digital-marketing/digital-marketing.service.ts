@@ -111,6 +111,30 @@ export async function assertProjectAccess(
       return { ...row, isOwner: true, isReadOnly: false };
     }
 
+    // 1b. Check if user is a Manager assigned to Digital Marketing department: full access
+    const [userRecord] = await db
+      .select({ role: users.role })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (userRecord?.role === 'manager') {
+      const [managerDept] = await db
+        .select()
+        .from(userDepartments)
+        .where(
+          and(
+            eq(userDepartments.userId, userId),
+            eq(userDepartments.departmentId, row.departmentId)
+          )
+        )
+        .limit(1);
+
+      if (managerDept) {
+        return { ...row, isOwner: true, isReadOnly: false };
+      }
+    }
+
     // 2. Check if user is an assigned Video Editor (read-only reference)
     const [assignment] = await db
       .select()
@@ -216,22 +240,44 @@ export async function listDmProjects(userId: string, isAdmin: boolean) {
 
   let assignedProjectIds: string[] = [];
   if (!isAdmin) {
-    // Check projects user created, OR projects where user is assigned
-    const userAssignments = await db
-      .select({ projectId: projectAssignments.projectId })
-      .from(projectAssignments)
-      .where(eq(projectAssignments.userId, userId));
-    assignedProjectIds = userAssignments.map((a) => a.projectId);
+    const [userRecord] = await db
+      .select({ role: users.role })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
 
-    if (assignedProjectIds.length > 0) {
-      conditions.push(
-        or(
-          eq(projects.createdBy, userId),
-          inArray(projects.id, assignedProjectIds)!
-        )!
-      );
-    } else {
-      conditions.push(eq(projects.createdBy, userId));
+    const isDmManager =
+      userRecord?.role === 'manager' &&
+      (await db
+        .select()
+        .from(userDepartments)
+        .where(
+          and(
+            eq(userDepartments.userId, userId),
+            eq(userDepartments.departmentId, dmDept.id)
+          )
+        )
+        .limit(1)
+        .then((r) => r.length > 0));
+
+    if (!isDmManager) {
+      // Check projects user created, OR projects where user is assigned
+      const userAssignments = await db
+        .select({ projectId: projectAssignments.projectId })
+        .from(projectAssignments)
+        .where(eq(projectAssignments.userId, userId));
+      assignedProjectIds = userAssignments.map((a) => a.projectId);
+
+      if (assignedProjectIds.length > 0) {
+        conditions.push(
+          or(
+            eq(projects.createdBy, userId),
+            inArray(projects.id, assignedProjectIds)!
+          )!
+        );
+      } else {
+        conditions.push(eq(projects.createdBy, userId));
+      }
     }
   }
 

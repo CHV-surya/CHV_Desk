@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { AdminSidebar } from './AdminSidebar';
+import { ManagerSidebar } from './ManagerSidebar';
 import { EmployeeSidebar } from './EmployeeSidebar';
 import { TopNavbar } from './TopNavbar';
 
@@ -9,7 +10,7 @@ interface AppLayoutProps {
 }
 
 export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isManager } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
   return (
@@ -17,6 +18,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       {/* Sidebar based on role */}
       {isAdmin ? (
         <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      ) : isManager ? (
+        <ManagerSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       ) : (
         <EmployeeSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       )}

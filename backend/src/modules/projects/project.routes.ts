@@ -21,11 +21,20 @@ const updateProjectSchema = z.object({
   status: z.string().optional(),
 });
 
+const setAssignmentsSchema = z.object({
+  userIds: z.array(z.string().uuid()),
+});
+
 router.get('/', controller.getProjects);
 router.get('/:id', controller.getProject);
 router.post('/', validateBody(createProjectSchema), controller.createProject);
 router.patch('/:id', validateBody(updateProjectSchema), controller.updateProject);
 router.delete('/:id', requireAdmin, controller.deleteProject);
+
+// Project assignments management
+router.get('/:id/assignable-employees', controller.getAssignableEmployees);
+router.get('/:id/assignments', controller.getProjectAssignments);
+router.put('/:id/assignments', validateBody(setAssignmentsSchema), controller.setProjectAssignments);
 
 export default router;
 

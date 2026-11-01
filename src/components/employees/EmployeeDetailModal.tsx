@@ -52,8 +52,8 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({
             <p className="text-xs text-slate-400 font-mono mt-0.5">@{employee.username}</p>
             <div className="flex items-center gap-2 mt-1.5">
               <Badge status={employee.status} dot size="md" />
-              <Badge variant={employee.role === 'admin' ? 'purple' : 'blue'} size="md">
-                {employee.role === 'admin' ? 'Admin' : 'Employee'}
+              <Badge variant={employee.role === 'admin' ? 'purple' : employee.role === 'manager' ? 'purple' : 'blue'} size="md">
+                {employee.role === 'admin' ? 'Admin' : employee.role === 'manager' ? 'Manager' : 'Employee'}
               </Badge>
             </div>
           </div>

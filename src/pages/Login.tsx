@@ -6,7 +6,7 @@ import { Button } from '../components/common/Button';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, currentUser, isAdmin } = useAuth();
+  const { login, currentUser, isAdmin, isManager } = useAuth();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -19,11 +19,13 @@ export const Login: React.FC = () => {
     if (currentUser) {
       if (isAdmin) {
         navigate('/admin', { replace: true });
+      } else if (isManager) {
+        navigate('/manager/dashboard', { replace: true });
       } else {
         navigate('/employee/dashboard', { replace: true });
       }
     }
-  }, [currentUser, isAdmin, navigate]);
+  }, [currentUser, isAdmin, isManager, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

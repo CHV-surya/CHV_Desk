@@ -29,3 +29,17 @@ export async function getEmployeeDashboard(req: Request, res: Response, next: Ne
   }
 }
 
+export async function getManagerDashboard(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = req.user!.userId;
+    const data = await dashboardService.getManagerDashboardData(userId);
+    sendSuccess(res, data, 'Manager dashboard metrics retrieved');
+  } catch (error: any) {
+    if (error.status) {
+      sendError(res, error.message, error.status);
+    } else {
+      next(error);
+    }
+  }
+}
+

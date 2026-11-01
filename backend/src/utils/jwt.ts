@@ -7,7 +7,7 @@ export const AUTH_COOKIE_NAME = 'worktrack_token';
 export interface JwtPayload {
   userId: string;
   username: string;
-  role: 'admin' | 'employee';
+  role: 'admin' | 'manager' | 'employee';
 }
 
 export function generateToken(payload: JwtPayload): string {

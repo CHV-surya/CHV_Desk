@@ -80,11 +80,15 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                         <div className="min-w-0">
                           <div className="font-bold text-slate-900 text-sm sm:text-[15px] flex items-center gap-2 truncate">
                             {emp.fullName}
-                            {isSuperAdmin && (
+                            {isSuperAdmin ? (
                               <span className="text-xs font-mono bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded-md">
                                 ADMIN
                               </span>
-                            )}
+                            ) : emp.role === 'manager' ? (
+                              <span className="text-xs font-mono bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-md">
+                                MANAGER
+                              </span>
+                            ) : null}
                           </div>
                           <div className="text-xs sm:text-[13px] text-slate-400 truncate mt-0.5">{emp.email}</div>
                         </div>

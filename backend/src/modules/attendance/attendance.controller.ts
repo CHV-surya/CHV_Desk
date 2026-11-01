@@ -7,6 +7,7 @@ export async function getTodayAttendance(req: Request, res: Response, next: Next
     const { departmentId, status, search } = req.query;
     const currentUserId = req.user!.userId;
     const isAdmin = req.user!.role === 'admin';
+    const userRole = req.user!.role;
 
     const records = await attendanceService.getTodayAttendance(
       {
@@ -15,7 +16,8 @@ export async function getTodayAttendance(req: Request, res: Response, next: Next
         search: search as string,
       },
       currentUserId,
-      isAdmin
+      isAdmin,
+      userRole
     );
 
     sendSuccess(res, records, "Today's attendance roster retrieved");
@@ -30,7 +32,9 @@ export async function getTodayAttendance(req: Request, res: Response, next: Next
 
 export async function getSummary(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const summary = await attendanceService.getAttendanceSummary();
+    const currentUserId = req.user?.userId;
+    const userRole = req.user?.role;
+    const summary = await attendanceService.getAttendanceSummary(currentUserId, userRole);
     sendSuccess(res, summary, 'Attendance summary metrics retrieved');
   } catch (error: any) {
     if (error.status) {

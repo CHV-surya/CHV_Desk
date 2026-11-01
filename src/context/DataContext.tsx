@@ -29,7 +29,7 @@ interface DataContextType {
     username: string;
     email?: string;
     password?: string;
-    role?: 'admin' | 'employee';
+    role?: 'admin' | 'manager' | 'employee';
     assignedDepartments: string[];
     status?: 'active' | 'inactive';
   }) => Promise<{ success: boolean; message?: string }>;
@@ -92,8 +92,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         api.get<DailyActivity[]>('/activities'),
       ];
 
-      // Admin has access to employees list
-      if (currentUser.role === 'admin') {
+      // Admin and Manager have access to employees list (manager scoped by backend)
+      if (currentUser.role === 'admin' || currentUser.role === 'manager') {
         fetches.push(api.get<Employee[]>('/employees'));
       }
 
@@ -182,7 +182,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     username: string;
     email?: string;
     password?: string;
-    role?: 'admin' | 'employee';
+    role?: 'admin' | 'manager' | 'employee';
     assignedDepartments: string[];
     status?: 'active' | 'inactive';
   }): Promise<{ success: boolean; message?: string }> => {

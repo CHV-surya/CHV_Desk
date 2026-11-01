@@ -1,6 +1,6 @@
 import { db } from '../../db/index.js';
 import { dailyActivities, departments, users, projects, userDepartments } from '../../db/schema.js';
-import { eq, and, sql, desc, or } from 'drizzle-orm';
+import { eq, and, sql, desc, or, inArray } from 'drizzle-orm';
 import { getTodayDateString, calculateWorkingDuration, formatTime12h } from '../../utils/date.js';
 
 export interface ActivityFilters {
@@ -14,6 +14,7 @@ export interface ActivityFilters {
   limit?: number;
   currentUserId: string;
   isAdmin: boolean;
+  userRole?: 'admin' | 'manager' | 'employee';
 }
 
 export async function listActivities(filters: ActivityFilters) {
@@ -28,27 +29,51 @@ export async function listActivities(filters: ActivityFilters) {
     limit = 100,
     currentUserId,
     isAdmin,
+    userRole,
   } = filters;
 
   const offset = (page - 1) * limit;
   const conditions = [];
 
-  // Employee can only view their own activities
-  if (!isAdmin) {
+  // Role-based visibility scoping
+  if (userRole === 'manager' && !isAdmin) {
+    // Manager: scoped to assigned departments
+    const managerDepts = await db
+      .select({ departmentId: userDepartments.departmentId })
+      .from(userDepartments)
+      .where(eq(userDepartments.userId, currentUserId));
+    const managerDeptIds = managerDepts.map((d) => d.departmentId);
+
+    if (managerDeptIds.length === 0) {
+      return [];
+    }
+
+    if (departmentId && departmentId !== 'all') {
+      if (!managerDeptIds.includes(departmentId)) {
+        throw { status: 403, message: 'Access denied: You are not assigned to this department' };
+      }
+      conditions.push(eq(dailyActivities.departmentId, departmentId));
+    } else {
+      conditions.push(inArray(dailyActivities.departmentId, managerDeptIds)!);
+    }
+
+    if (employeeId && employeeId !== 'all') {
+      conditions.push(eq(dailyActivities.employeeId, employeeId));
+    }
+  } else if (!isAdmin) {
+    // Regular employee can only view their own activities
     conditions.push(eq(dailyActivities.employeeId, currentUserId));
-  } else if (employeeId && employeeId !== 'all') {
-    conditions.push(eq(dailyActivities.employeeId, employeeId));
-  }
-
-  if (date) {
-    conditions.push(eq(dailyActivities.workDate, date));
-  } else if (month) {
-    // Filter by YYYY-MM
-    conditions.push(sql`TO_CHAR(${dailyActivities.workDate}, 'YYYY-MM') = ${month}`);
-  }
-
-  if (departmentId && departmentId !== 'all') {
-    conditions.push(eq(dailyActivities.departmentId, departmentId));
+    if (departmentId && departmentId !== 'all') {
+      conditions.push(eq(dailyActivities.departmentId, departmentId));
+    }
+  } else {
+    // Admin: full access
+    if (employeeId && employeeId !== 'all') {
+      conditions.push(eq(dailyActivities.employeeId, employeeId));
+    }
+    if (departmentId && departmentId !== 'all') {
+      conditions.push(eq(dailyActivities.departmentId, departmentId));
+    }
   }
 
   if (status && status !== 'all') {

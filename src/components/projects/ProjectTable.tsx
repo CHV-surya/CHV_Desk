@@ -6,11 +6,13 @@ import { Badge } from '../common/Badge';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { EditProjectModal } from './EditProjectModal';
 import { AssignEditorsModal } from '../digital-marketing/AssignEditorsModal';
+import { AssignEmployeesModal } from './AssignEmployeesModal';
 import { useData } from '../../context/DataContext';
 
 interface ProjectTableProps {
   projects: Project[];
   isAdmin: boolean;
+  isManager?: boolean;
   currentUserId?: string;
   onRenameProject: (id: string, newName: string, description?: string) => void | Promise<void>;
   onDeleteProject?: (id: string) => void | Promise<void>;
@@ -19,6 +21,7 @@ interface ProjectTableProps {
 export const ProjectTable: React.FC<ProjectTableProps> = ({
   projects,
   isAdmin,
+  isManager = false,
   currentUserId,
   onRenameProject,
   onDeleteProject,
@@ -27,7 +30,8 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({
   const { refreshData } = useData();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deleteCandidate, setDeleteCandidate] = useState<Project | null>(null);
-  const [assignModalProject, setAssignModalProject] = useState<Project | null>(null);
+  const [assignDmModalProject, setAssignDmModalProject] = useState<Project | null>(null);
+  const [assignGenModalProject, setAssignGenModalProject] = useState<Project | null>(null);
 
   return (
     <div className="glass-card rounded-2xl overflow-hidden">
@@ -66,7 +70,7 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({
                 const isAssigned = Boolean(proj.isAssigned);
                 const canRename = (isAdmin || isOwner) && !isAssigned;
                 const canDelete = isAdmin && !isAssigned;
-                const canAssignEditors = (isAdmin || isOwner) && !isAssigned;
+                const canAssign = (isAdmin || isManager || isOwner) && !isAssigned;
                 const isDmProject =
                   proj.departmentName?.toLowerCase().includes('digital') ||
                   proj.departmentName === 'Digital Marketing';
@@ -160,11 +164,17 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({
                           </button>
                         )}
 
-                        {isDmProject && canAssignEditors && (
+                        {canAssign && (
                           <button
                             type="button"
-                            onClick={() => setAssignModalProject(proj)}
-                            title="Assign Video Editors"
+                            onClick={() => {
+                              if (isDmProject) {
+                                setAssignDmModalProject(proj);
+                              } else {
+                                setAssignGenModalProject(proj);
+                              }
+                            }}
+                            title={isDmProject ? "Assign Video Editors" : "Assign Team Members"}
                             className="p-1.5 rounded-lg text-slate-500 hover:text-purple-600 hover:bg-purple-50 border border-transparent hover:border-purple-200 transition-colors cursor-pointer"
                           >
                             <Users className="w-4 h-4" />
@@ -224,13 +234,27 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({
         variant="danger"
       />
 
-      {/* Assign Video Editors Modal */}
-      {assignModalProject && (
+      {/* Assign Video Editors Modal (Digital Marketing) */}
+      {assignDmModalProject && (
         <AssignEditorsModal
-          isOpen={!!assignModalProject}
-          onClose={() => setAssignModalProject(null)}
-          projectId={assignModalProject.id}
-          projectName={assignModalProject.name}
+          isOpen={!!assignDmModalProject}
+          onClose={() => setAssignDmModalProject(null)}
+          projectId={assignDmModalProject.id}
+          projectName={assignDmModalProject.name}
+          onSaved={async () => {
+            await refreshData();
+          }}
+        />
+      )}
+
+      {/* Assign Employees Modal (General Projects) */}
+      {assignGenModalProject && (
+        <AssignEmployeesModal
+          isOpen={!!assignGenModalProject}
+          onClose={() => setAssignGenModalProject(null)}
+          projectId={assignGenModalProject.id}
+          projectName={assignGenModalProject.name}
+          departmentName={assignGenModalProject.departmentName}
           onSaved={async () => {
             await refreshData();
           }}

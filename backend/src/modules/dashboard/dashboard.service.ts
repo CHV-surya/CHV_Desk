@@ -175,3 +175,164 @@ export async function getEmployeeDashboardData(userId: string) {
   };
 }
 
+export async function getManagerDashboardData(userId: string) {
+  const today = getTodayDateString();
+
+  // 1. Manager's assigned departments
+  const assignedDepts = await db
+    .select({
+      id: departments.id,
+      name: departments.name,
+      slug: departments.slug,
+      description: departments.description,
+      color: departments.accentColor,
+      isActive: departments.isActive,
+    })
+    .from(userDepartments)
+    .innerJoin(departments, eq(userDepartments.departmentId, departments.id))
+    .where(and(eq(userDepartments.userId, userId), eq(departments.isActive, true)));
+
+  const deptIds = assignedDepts.map((d) => d.id);
+
+  if (deptIds.length === 0) {
+    return {
+      kpis: {
+        totalEmployees: 0,
+        activeToday: 0,
+        currentlyWorking: 0,
+        completedToday: 0,
+        notJoinedToday: 0,
+        attendanceRate: 0,
+        totalProjects: 0,
+        totalDepartments: 0,
+      },
+      donutData: [
+        { name: 'Working', value: 0, color: '#2563EB' },
+        { name: 'Completed', value: 0, color: '#10B981' },
+        { name: 'Not Joined', value: 0, color: '#F59E0B' },
+      ],
+      departments: [],
+      recentActivities: [],
+      assignedDepartments: [],
+    };
+  }
+
+  // 2. Department staff employees (in manager's assigned departments)
+  const deptEmployees = await db
+    .select({
+      departmentId: userDepartments.departmentId,
+      userId: users.id,
+      fullName: users.fullName,
+      username: users.username,
+      email: users.email,
+    })
+    .from(userDepartments)
+    .innerJoin(users, eq(userDepartments.userId, users.id))
+    .where(
+      and(
+        inArray(userDepartments.departmentId, deptIds)!,
+        eq(users.role, 'employee'),
+        eq(users.isActive, true)
+      )
+    );
+
+  const uniqueEmployeeIds = Array.from(new Set(deptEmployees.map((e) => e.userId)));
+  const totalEmployees = uniqueEmployeeIds.length;
+
+  // 3. Projects in manager's assigned departments
+  const deptProjects = await db
+    .select({
+      id: projects.id,
+      name: projects.name,
+      departmentId: projects.departmentId,
+    })
+    .from(projects)
+    .where(inArray(projects.departmentId, deptIds)!);
+
+  const totalProjects = deptProjects.length;
+
+  // 4. Activities in manager's assigned departments today
+  const todayActivities = await db
+    .select({
+      id: dailyActivities.id,
+      employeeId: dailyActivities.employeeId,
+      departmentId: dailyActivities.departmentId,
+      status: dailyActivities.status,
+      workingMinutes: dailyActivities.workingMinutes,
+      notes: dailyActivities.notes,
+    })
+    .from(dailyActivities)
+    .where(
+      and(
+        eq(dailyActivities.workDate, today),
+        inArray(dailyActivities.departmentId, deptIds)!
+      )
+    );
+
+  const activeTodayIds = new Set(
+    todayActivities.filter((a) => a.status === 'working' || a.status === 'completed').map((a) => a.employeeId)
+  );
+  const currentlyWorkingIds = new Set(
+    todayActivities.filter((a) => a.status === 'working').map((a) => a.employeeId)
+  );
+  const completedTodayIds = new Set(
+    todayActivities.filter((a) => a.status === 'completed').map((a) => a.employeeId)
+  );
+
+  const activeToday = activeTodayIds.size;
+  const currentlyWorking = currentlyWorkingIds.size;
+  const completedToday = completedTodayIds.size;
+  const notJoinedToday = Math.max(0, totalEmployees - activeToday);
+  const attendanceRate = totalEmployees > 0 ? Math.round((activeToday / totalEmployees) * 100) : 0;
+
+  // 5. Department cards for manager's assigned departments
+  const departmentCards = assignedDepts.map((d) => {
+    const dEmps = deptEmployees.filter((e) => e.departmentId === d.id);
+    const dPrjs = deptProjects.filter((p) => p.departmentId === d.id);
+    const dTodayActs = todayActivities.filter((a) => a.departmentId === d.id);
+    const dWorking = dTodayActs.filter((a) => a.status === 'working').length;
+    const latestNote = dTodayActs.find((a) => a.notes && a.notes.trim())?.notes || 'No activity notes logged yet today';
+
+    return {
+      id: d.id,
+      name: d.name,
+      slug: d.slug,
+      color: d.color,
+      totalEmployees: dEmps.length,
+      activeToday: dWorking,
+      totalProjects: dPrjs.length,
+      latestNotes: latestNote,
+    };
+  });
+
+  // 6. Recent activities in manager's assigned departments
+  const recentActivities = await listActivities({
+    departmentId: deptIds.length === 1 ? deptIds[0] : undefined,
+    currentUserId: userId,
+    isAdmin: false,
+    userRole: 'manager',
+    limit: 10,
+  });
+
+  return {
+    kpis: {
+      totalEmployees,
+      activeToday,
+      currentlyWorking,
+      completedToday,
+      notJoinedToday,
+      attendanceRate,
+      totalProjects,
+      totalDepartments: assignedDepts.length,
+    },
+    donutData: [
+      { name: 'Working', value: currentlyWorking, color: '#2563EB' },
+      { name: 'Completed', value: completedToday, color: '#10B981' },
+      { name: 'Not Joined', value: notJoinedToday, color: '#F59E0B' },
+    ],
+    departments: departmentCards,
+    recentActivities,
+    assignedDepartments: assignedDepts,
+  };
+}
+

@@ -6,9 +6,30 @@ import { getTodayDateString, calculateWorkingDuration, formatTime12h } from '../
 export async function getTodayAttendance(
   filters: { departmentId?: string; status?: string; search?: string },
   currentUserId: string,
-  isAdmin: boolean
+  isAdmin: boolean,
+  userRole?: 'admin' | 'manager' | 'employee'
 ) {
   const today = getTodayDateString();
+
+  // Manager department scope validation
+  let managerDeptIds: string[] = [];
+  if (userRole === 'manager' && !isAdmin) {
+    const managerDepts = await db
+      .select({ departmentId: userDepartments.departmentId })
+      .from(userDepartments)
+      .where(eq(userDepartments.userId, currentUserId));
+    managerDeptIds = managerDepts.map((d) => d.departmentId);
+
+    if (managerDeptIds.length === 0) {
+      return [];
+    }
+
+    if (filters.departmentId && filters.departmentId !== 'all') {
+      if (!managerDeptIds.includes(filters.departmentId)) {
+        throw { status: 403, message: 'Access denied: You are not assigned to this department' };
+      }
+    }
+  }
 
   // 1. Get staff employees (exclude admin from attendance count)
   const staffUsersQuery = db
@@ -21,7 +42,7 @@ export async function getTodayAttendance(
     .from(users)
     .where(and(eq(users.role, 'employee'), eq(users.isActive, true)));
 
-  const allStaff = await staffUsersQuery;
+  let allStaff = await staffUsersQuery;
 
   // 2. Get department assignments
   const userIds = allStaff.map((u) => u.id);
@@ -36,6 +57,14 @@ export async function getTodayAttendance(
       .from(userDepartments)
       .innerJoin(departments, eq(userDepartments.departmentId, departments.id))
       .where(inArray(userDepartments.userId, userIds));
+  }
+
+  // If manager, scope staff employees to manager's assigned departments
+  if (userRole === 'manager' && !isAdmin) {
+    const allowedUserIds = new Set(
+      assignments.filter((a) => managerDeptIds.includes(a.departmentId)).map((a) => a.userId)
+    );
+    allStaff = allStaff.filter((u) => allowedUserIds.has(u.id));
   }
 
   // 3. Get today's activity records
@@ -103,18 +132,68 @@ export async function getTodayAttendance(
   return filtered;
 }
 
-export async function getAttendanceSummary() {
+export async function getAttendanceSummary(currentUserId?: string, userRole?: string) {
   const today = getTodayDateString();
 
-  // Total active staff (excluding admin)
-  const [staffCountRow] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(users)
-    .where(and(eq(users.role, 'employee'), eq(users.isActive, true)));
+  let managerDeptIds: string[] = [];
+  if (userRole === 'manager' && currentUserId) {
+    const managerDepts = await db
+      .select({ departmentId: userDepartments.departmentId })
+      .from(userDepartments)
+      .where(eq(userDepartments.userId, currentUserId));
+    managerDeptIds = managerDepts.map((d) => d.departmentId);
 
-  const totalEmployees = Number(staffCountRow?.count || 0);
+    if (managerDeptIds.length === 0) {
+      return {
+        totalEmployees: 0,
+        activeToday: 0,
+        currentlyWorking: 0,
+        completedToday: 0,
+        notJoinedToday: 0,
+        attendanceRate: 0,
+        donutData: [
+          { name: 'Working', value: 0, color: '#2563EB' },
+          { name: 'Completed', value: 0, color: '#10B981' },
+          { name: 'Not Joined', value: 0, color: '#F59E0B' },
+        ],
+      };
+    }
+  }
 
-  // Today's activities
+  // Total active staff (excluding admin, scoped if manager)
+  let totalEmployees = 0;
+  if (userRole === 'manager' && managerDeptIds.length > 0) {
+    const managerEmployees = await db
+      .select({ userId: userDepartments.userId })
+      .from(userDepartments)
+      .innerJoin(users, eq(userDepartments.userId, users.id))
+      .where(
+        and(
+          inArray(userDepartments.departmentId, managerDeptIds)!,
+          eq(users.role, 'employee'),
+          eq(users.isActive, true)
+        )
+      );
+    totalEmployees = new Set(managerEmployees.map((e) => e.userId)).size;
+  } else {
+    const [staffCountRow] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(and(eq(users.role, 'employee'), eq(users.isActive, true)));
+    totalEmployees = Number(staffCountRow?.count || 0);
+  }
+
+  // Today's activities (scoped if manager)
+  const actConditions = [
+    eq(dailyActivities.workDate, today),
+    eq(users.role, 'employee'),
+    eq(users.isActive, true),
+  ];
+
+  if (userRole === 'manager' && managerDeptIds.length > 0) {
+    actConditions.push(inArray(dailyActivities.departmentId, managerDeptIds)!);
+  }
+
   const todayActs = await db
     .select({
       id: dailyActivities.id,
@@ -122,13 +201,7 @@ export async function getAttendanceSummary() {
     })
     .from(dailyActivities)
     .innerJoin(users, eq(dailyActivities.employeeId, users.id))
-    .where(
-      and(
-        eq(dailyActivities.workDate, today),
-        eq(users.role, 'employee'),
-        eq(users.isActive, true)
-      )
-    );
+    .where(and(...actConditions));
 
   const currentlyWorking = todayActs.filter((a) => a.status === 'working').length;
   const completedToday = todayActs.filter((a) => a.status === 'completed').length;

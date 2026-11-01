@@ -7,6 +7,7 @@ export async function getActivities(req: Request, res: Response, next: NextFunct
     const { date, month, departmentId, employeeId, status, search, page, limit } = req.query;
     const currentUserId = req.user!.userId;
     const isAdmin = req.user!.role === 'admin';
+    const userRole = req.user!.role;
 
     const activities = await activityService.listActivities({
       date: date as string,
@@ -19,6 +20,7 @@ export async function getActivities(req: Request, res: Response, next: NextFunct
       limit: limit ? parseInt(limit as string, 10) : 100,
       currentUserId,
       isAdmin,
+      userRole,
     });
 
     sendSuccess(res, activities, 'Activities retrieved successfully');

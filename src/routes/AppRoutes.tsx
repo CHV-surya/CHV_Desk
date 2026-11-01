@@ -17,6 +17,13 @@ import { Attendance } from '../pages/admin/Attendance';
 import { RetentionPolicy } from '../pages/admin/RetentionPolicy';
 import { Settings } from '../pages/admin/Settings';
 
+// Manager Pages
+import { ManagerDashboard } from '../pages/manager/ManagerDashboard';
+import { ManagerProjects } from '../pages/manager/ManagerProjects';
+import { ManagerEmployees } from '../pages/manager/ManagerEmployees';
+import { ManagerActivities } from '../pages/manager/ManagerActivities';
+import { ManagerAttendance } from '../pages/manager/ManagerAttendance';
+
 // Employee Pages
 import { DepartmentDashboard } from '../pages/employee/DepartmentDashboard';
 import { MyProjects } from '../pages/employee/MyProjects';
@@ -28,13 +35,28 @@ import { DigitalMarketingWorkspacePage } from '../pages/digital-marketing/Digita
 
 // Protected Route Component for Admin
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { currentUser, isAdmin } = useAuth();
+  const { currentUser, isAdmin, isManager } = useAuth();
 
   if (!currentUser) {
     return <Navigate to="/login" replace />;
   }
 
   if (!isAdmin) {
+    return <Navigate to={isManager ? "/manager/dashboard" : "/employee/dashboard"} replace />;
+  }
+
+  return <AppLayout>{children}</AppLayout>;
+};
+
+// Protected Route Component for Manager
+const ManagerRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { currentUser, isManager, isAdmin } = useAuth();
+
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!isManager && !isAdmin) {
     return <Navigate to="/employee/dashboard" replace />;
   }
 
@@ -53,7 +75,7 @@ const EmployeeRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 };
 
 export const AppRoutes: React.FC = () => {
-  const { currentUser, isAdmin } = useAuth();
+  const { currentUser, isAdmin, isManager } = useAuth();
 
   return (
     <Routes>
@@ -150,6 +172,72 @@ export const AppRoutes: React.FC = () => {
         }
       />
 
+      {/* Manager Protected Routes */}
+      <Route
+        path="/manager"
+        element={
+          <ManagerRoute>
+            <Navigate to="/manager/dashboard" replace />
+          </ManagerRoute>
+        }
+      />
+      <Route
+        path="/manager/dashboard"
+        element={
+          <ManagerRoute>
+            <ManagerDashboard />
+          </ManagerRoute>
+        }
+      />
+      <Route
+        path="/manager/projects"
+        element={
+          <ManagerRoute>
+            <ManagerProjects />
+          </ManagerRoute>
+        }
+      />
+      <Route
+        path="/manager/employees"
+        element={
+          <ManagerRoute>
+            <ManagerEmployees />
+          </ManagerRoute>
+        }
+      />
+      <Route
+        path="/manager/activities"
+        element={
+          <ManagerRoute>
+            <ManagerActivities />
+          </ManagerRoute>
+        }
+      />
+      <Route
+        path="/manager/attendance"
+        element={
+          <ManagerRoute>
+            <ManagerAttendance />
+          </ManagerRoute>
+        }
+      />
+      <Route
+        path="/manager/digital-marketing"
+        element={
+          <ManagerRoute>
+            <DigitalMarketingWorkspacePage />
+          </ManagerRoute>
+        }
+      />
+      <Route
+        path="/manager/digital-marketing/:projectId"
+        element={
+          <ManagerRoute>
+            <DigitalMarketingWorkspacePage />
+          </ManagerRoute>
+        }
+      />
+
       {/* Employee Protected Routes */}
       <Route
         path="/employee/dashboard"
@@ -207,6 +295,8 @@ export const AppRoutes: React.FC = () => {
           currentUser ? (
             isAdmin ? (
               <Navigate to="/admin" replace />
+            ) : isManager ? (
+              <Navigate to="/manager/dashboard" replace />
             ) : (
               <Navigate to="/employee/dashboard" replace />
             )
@@ -218,4 +308,3 @@ export const AppRoutes: React.FC = () => {
     </Routes>
   );
 };
-

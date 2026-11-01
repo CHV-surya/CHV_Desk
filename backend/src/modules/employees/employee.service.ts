@@ -9,11 +9,33 @@ export interface EmployeeFilters {
   status?: string;
   page?: number;
   limit?: number;
+  currentUserId?: string;
+  userRole?: 'admin' | 'manager' | 'employee';
 }
 
 export async function listEmployees(filters: EmployeeFilters) {
-  const { search, departmentId, status, page = 1, limit = 50 } = filters;
+  const { search, departmentId, status, page = 1, limit = 50, currentUserId, userRole } = filters;
   const offset = (page - 1) * limit;
+
+  // Manager department scope validation
+  let managerDeptIds: string[] = [];
+  if (userRole === 'manager' && currentUserId) {
+    const managerDepts = await db
+      .select({ departmentId: userDepartments.departmentId })
+      .from(userDepartments)
+      .where(eq(userDepartments.userId, currentUserId));
+    managerDeptIds = managerDepts.map((d) => d.departmentId);
+
+    if (managerDeptIds.length === 0) {
+      return [];
+    }
+
+    if (departmentId && departmentId !== 'all') {
+      if (!managerDeptIds.includes(departmentId)) {
+        throw { status: 403, message: 'Access denied: You are not assigned to this department' };
+      }
+    }
+  }
 
   // Base conditions
   const conditions = [];
@@ -95,10 +117,21 @@ export async function listEmployees(filters: EmployeeFilters) {
     return results.filter((u) => u.assignedDepartments.includes(departmentId));
   }
 
+  // If manager, restrict to employees belonging to manager's assigned departments
+  if (userRole === 'manager' && managerDeptIds.length > 0) {
+    return results.filter((u) =>
+      u.assignedDepartments.some((d) => managerDeptIds.includes(d))
+    );
+  }
+
   return results;
 }
 
-export async function getEmployeeById(id: string) {
+export async function getEmployeeById(
+  id: string,
+  currentUserId?: string,
+  userRole?: 'admin' | 'manager' | 'employee'
+) {
   const [user] = await db
     .select({
       id: users.id,
@@ -129,6 +162,23 @@ export async function getEmployeeById(id: string) {
     .innerJoin(departments, eq(userDepartments.departmentId, departments.id))
     .where(eq(userDepartments.userId, user.id));
 
+  // If manager, verify that target employee shares at least one assigned department
+  if (userRole === 'manager' && currentUserId) {
+    const managerDepts = await db
+      .select({ departmentId: userDepartments.departmentId })
+      .from(userDepartments)
+      .where(eq(userDepartments.userId, currentUserId));
+    const managerDeptIds = managerDepts.map((d) => d.departmentId);
+
+    const hasSharedDept = depts.some((d) => managerDeptIds.includes(d.id));
+    if (!hasSharedDept) {
+      throw {
+        status: 403,
+        message: 'Access denied: Employee does not belong to your assigned departments',
+      };
+    }
+  }
+
   return {
     id: user.id,
     fullName: user.fullName,
@@ -148,7 +198,7 @@ export async function createEmployee(data: {
   username: string;
   email?: string;
   password?: string;
-  role?: 'admin' | 'employee';
+  role?: 'admin' | 'manager' | 'employee';
   assignedDepartments: string[];
 }) {
   const cleanUsername = data.username.trim().toLowerCase();
@@ -211,6 +261,7 @@ export async function updateEmployee(
     username?: string;
     email?: string;
     password?: string;
+    role?: 'admin' | 'manager' | 'employee';
     status?: 'active' | 'inactive';
     assignedDepartments?: string[];
   }
@@ -224,6 +275,7 @@ export async function updateEmployee(
 
   if (data.fullName !== undefined) updates.fullName = data.fullName.trim();
   if (data.status !== undefined) updates.isActive = data.status === 'active';
+  if (data.role !== undefined) updates.role = data.role;
 
   if (data.username !== undefined) {
     const cleanUsername = data.username.trim().toLowerCase();

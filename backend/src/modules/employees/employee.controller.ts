@@ -5,12 +5,17 @@ import { sendSuccess, sendError } from '../../utils/response.js';
 export async function getEmployees(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { search, departmentId, status, page, limit } = req.query;
+    const currentUserId = req.user!.userId;
+    const userRole = req.user!.role;
+
     const employees = await employeeService.listEmployees({
       search: search as string,
       departmentId: departmentId as string,
       status: status as string,
       page: page ? parseInt(page as string, 10) : 1,
       limit: limit ? parseInt(limit as string, 10) : 50,
+      currentUserId,
+      userRole,
     });
     sendSuccess(res, employees, 'Employees retrieved successfully');
   } catch (error: any) {
@@ -24,7 +29,9 @@ export async function getEmployees(req: Request, res: Response, next: NextFuncti
 
 export async function getEmployee(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const employee = await employeeService.getEmployeeById(req.params.id);
+    const currentUserId = req.user!.userId;
+    const userRole = req.user!.role;
+    const employee = await employeeService.getEmployeeById(req.params.id, currentUserId, userRole);
     sendSuccess(res, employee, 'Employee details retrieved');
   } catch (error: any) {
     if (error.status) {

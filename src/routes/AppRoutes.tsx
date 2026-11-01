@@ -23,6 +23,9 @@ import { MyProjects } from '../pages/employee/MyProjects';
 import { DailyActivityTrackerPage } from '../pages/employee/DailyActivityTrackerPage';
 import { MyRecords } from '../pages/employee/MyRecords';
 
+// Digital Marketing Dedicated Module
+import { DigitalMarketingWorkspacePage } from '../pages/digital-marketing/DigitalMarketingWorkspacePage';
+
 // Protected Route Component for Admin
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, isAdmin } = useAuth();
@@ -99,6 +102,22 @@ export const AppRoutes: React.FC = () => {
         }
       />
       <Route
+        path="/admin/digital-marketing"
+        element={
+          <AdminRoute>
+            <DigitalMarketingWorkspacePage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/digital-marketing/:projectId"
+        element={
+          <AdminRoute>
+            <DigitalMarketingWorkspacePage />
+          </AdminRoute>
+        }
+      />
+      <Route
         path="/admin/daily-activities"
         element={
           <AdminRoute>
@@ -145,6 +164,22 @@ export const AppRoutes: React.FC = () => {
         element={
           <EmployeeRoute>
             <MyProjects />
+          </EmployeeRoute>
+        }
+      />
+      <Route
+        path="/employee/digital-marketing"
+        element={
+          <EmployeeRoute>
+            <DigitalMarketingWorkspacePage />
+          </EmployeeRoute>
+        }
+      />
+      <Route
+        path="/employee/digital-marketing/:projectId"
+        element={
+          <EmployeeRoute>
+            <DigitalMarketingWorkspacePage />
           </EmployeeRoute>
         }
       />

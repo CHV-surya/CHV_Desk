@@ -10,6 +10,7 @@ import {
   Building2,
   Check,
   ChevronRight,
+  TrendingUp,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
@@ -24,17 +25,22 @@ export const EmployeeSidebar: React.FC<EmployeeSidebarProps> = ({ isOpen, onClos
   const { logout, currentUser, activeDepartmentId, setActiveDepartmentId } = useAuth();
   const { departments } = useData();
 
-  const navigationItems = [
-    { name: 'Dashboard', path: '/employee/dashboard', icon: LayoutDashboard },
-    { name: 'Daily Activity', path: '/employee/activity', icon: Clock },
-    { name: 'My Projects', path: '/employee/projects', icon: FolderKanban },
-    { name: 'My Records', path: '/employee/records', icon: FileSpreadsheet },
-  ];
-
   // Assigned departments for this employee
   const assignedDepts = departments.filter((d) =>
     currentUser?.assignedDepartments?.includes(d.id)
   );
+
+  const isDmAssigned = assignedDepts.some((d) => d.slug === 'digital-marketing');
+
+  const navigationItems = [
+    { name: 'Dashboard', path: '/employee/dashboard', icon: LayoutDashboard },
+    { name: 'Daily Activity', path: '/employee/activity', icon: Clock },
+    { name: 'My Projects', path: '/employee/projects', icon: FolderKanban },
+    ...(isDmAssigned
+      ? [{ name: 'Digital Marketing', path: '/employee/digital-marketing', icon: TrendingUp }]
+      : []),
+    { name: 'My Records', path: '/employee/records', icon: FileSpreadsheet },
+  ];
 
   return (
     <>

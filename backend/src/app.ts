@@ -16,6 +16,7 @@ import attendanceRoutes from './modules/attendance/attendance.routes.js';
 import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
 import retentionRoutes from './modules/retention/retention.routes.js';
 import cronRoutes from './modules/cron/cron.routes.js';
+import digitalMarketingRoutes from './modules/digital-marketing/digital-marketing.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -65,6 +66,7 @@ export function createApp(): Express {
   app.use('/api/activities', activityRoutes);
   app.use('/api/attendance', attendanceRoutes);
   app.use('/api/dashboard', dashboardRoutes);
+  app.use('/api/digital-marketing', digitalMarketingRoutes);
   app.use('/api/admin/retention', retentionRoutes);
   app.use('/api/cron', cronRoutes);
 

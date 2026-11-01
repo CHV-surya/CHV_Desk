@@ -9,6 +9,7 @@ import {
   integer,
   pgEnum,
   uniqueIndex,
+  index,
 } from 'drizzle-orm/pg-core';
 import { relations, InferSelectModel, InferInsertModel } from 'drizzle-orm';
 
@@ -103,6 +104,52 @@ export const dailyActivities = pgTable(
   ]
 );
 
+// 6. Digital Marketing Months Table
+export const digitalMarketingMonths = pgTable(
+  'digital_marketing_months',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    projectId: uuid('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    month: integer('month').notNull(), // 1 - 12
+    year: integer('year').notNull(), // e.g. 2026
+    videoTarget: integer('video_target').default(0).notNull(),
+    posterTarget: integer('poster_target').default(0).notNull(),
+    createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex('dm_project_month_year_unique_idx').on(table.projectId, table.month, table.year),
+  ]
+);
+
+// 7. Digital Marketing Entries Table (Videos & Posters)
+export const digitalMarketingEntries = pgTable(
+  'digital_marketing_entries',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    monthlyRecordId: uuid('monthly_record_id')
+      .notNull()
+      .references(() => digitalMarketingMonths.id, { onDelete: 'cascade' }),
+    contentType: varchar('content_type', { length: 20 }).notNull(), // 'video' | 'poster'
+    contentName: text('content_name').notNull(),
+    videoShoot: boolean('video_shoot'), // null = not set, true = YES, false = NO
+    editing: boolean('editing'), // null = not set, true = YES, false = NO
+    clientConfirmation: boolean('client_confirmation'), // null = not set, true = YES, false = NO
+    scheduled: boolean('scheduled'), // null = not set, true = YES, false = NO
+    scheduledDate: date('scheduled_date'), // YYYY-MM-DD
+    adCampaignReportUrl: text('ad_campaign_report_url'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('dm_entries_monthly_record_idx').on(table.monthlyRecordId),
+    index('dm_entries_content_type_idx').on(table.monthlyRecordId, table.contentType),
+  ]
+);
+
 // Drizzle Relations
 export const usersRelations = relations(users, ({ many }) => ({
   userDepartments: many(userDepartments),
@@ -137,6 +184,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     references: [users.id],
   }),
   activities: many(dailyActivities),
+  digitalMarketingMonths: many(digitalMarketingMonths),
 }));
 
 export const dailyActivitiesRelations = relations(dailyActivities, ({ one }) => ({
@@ -151,6 +199,25 @@ export const dailyActivitiesRelations = relations(dailyActivities, ({ one }) => 
   project: one(projects, {
     fields: [dailyActivities.projectId],
     references: [projects.id],
+  }),
+}));
+
+export const digitalMarketingMonthsRelations = relations(digitalMarketingMonths, ({ one, many }) => ({
+  project: one(projects, {
+    fields: [digitalMarketingMonths.projectId],
+    references: [projects.id],
+  }),
+  creator: one(users, {
+    fields: [digitalMarketingMonths.createdBy],
+    references: [users.id],
+  }),
+  entries: many(digitalMarketingEntries),
+}));
+
+export const digitalMarketingEntriesRelations = relations(digitalMarketingEntries, ({ one }) => ({
+  monthlyRecord: one(digitalMarketingMonths, {
+    fields: [digitalMarketingEntries.monthlyRecordId],
+    references: [digitalMarketingMonths.id],
   }),
 }));
 
@@ -169,4 +236,10 @@ export type NewProject = InferInsertModel<typeof projects>;
 
 export type DailyActivity = InferSelectModel<typeof dailyActivities>;
 export type NewDailyActivity = InferInsertModel<typeof dailyActivities>;
+
+export type DigitalMarketingMonth = InferSelectModel<typeof digitalMarketingMonths>;
+export type NewDigitalMarketingMonth = InferInsertModel<typeof digitalMarketingMonths>;
+
+export type DigitalMarketingEntry = InferSelectModel<typeof digitalMarketingEntries>;
+export type NewDigitalMarketingEntry = InferInsertModel<typeof digitalMarketingEntries>;
 

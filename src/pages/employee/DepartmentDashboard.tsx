@@ -17,6 +17,7 @@ import {
   Video,
   Target,
   Sparkles,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
@@ -184,6 +185,17 @@ export const DepartmentDashboard: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3 flex-shrink-0">
+          {activeDept?.slug === 'digital-marketing' && (
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => navigate('/employee/digital-marketing')}
+              icon={<FileSpreadsheet className="w-4 h-4" />}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              Monthly Reports
+            </Button>
+          )}
           <Button
             variant="outline"
             size="md"

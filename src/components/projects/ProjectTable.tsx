@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Edit2, Trash2, FolderKanban, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Edit2, Trash2, FolderKanban, User, FileSpreadsheet } from 'lucide-react';
 import { Project } from '../../types';
 import { Badge } from '../common/Badge';
 import { ConfirmModal } from '../common/ConfirmModal';
@@ -20,6 +21,7 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({
   onRenameProject,
   onDeleteProject,
 }) => {
+  const navigate = useNavigate();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deleteCandidate, setDeleteCandidate] = useState<Project | null>(null);
 
@@ -59,6 +61,9 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({
                 const isOwner = proj.createdBy === currentUserId;
                 const canRename = isAdmin || isOwner;
                 const canDelete = isAdmin;
+                const isDmProject =
+                  proj.departmentName?.toLowerCase().includes('digital') ||
+                  proj.departmentName === 'Digital Marketing';
 
                 return (
                   <tr key={proj.id} className="hover:bg-blue-50/30 transition-colors">
@@ -118,6 +123,23 @@ export const ProjectTable: React.FC<ProjectTableProps> = ({
                     {/* Actions */}
                     <td className="py-3.5 px-5 text-right">
                       <div className="flex items-center justify-end gap-1.5">
+                        {isDmProject && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const path = isAdmin
+                                ? `/admin/digital-marketing/${proj.id}`
+                                : `/employee/digital-marketing/${proj.id}`;
+                              navigate(path);
+                            }}
+                            title="Open Monthly Reporting Workspace"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors shadow-2xs cursor-pointer mr-1"
+                          >
+                            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="hidden sm:inline">Monthly Reports</span>
+                          </button>
+                        )}
+
                         {canRename && (
                           <button
                             onClick={() => setEditingProject(proj)}

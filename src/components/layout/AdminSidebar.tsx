@@ -13,6 +13,7 @@ import {
   X,
   Briefcase,
   ChevronRight,
+  TrendingUp,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Avatar } from '../common/Avatar';
@@ -41,6 +42,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
         { name: 'Departments', path: '/admin/departments', icon: Building2 },
         { name: 'Employees', path: '/admin/employees', icon: Users },
         { name: 'Projects', path: '/admin/projects', icon: FolderKanban },
+        { name: 'Digital Marketing', path: '/admin/digital-marketing', icon: TrendingUp },
       ],
     },
     {

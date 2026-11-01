@@ -22,10 +22,14 @@ export function createApp(): Express {
   const app = express();
 
   // Vercel serverless request path normalization
+  // On Vercel, req.url already contains the original client URL (e.g. /api/auth/login).
+  // x-matched-path is the *rewrite destination* (e.g. /api/index.ts) — NOT the original path.
+  // We only need to normalise for local dev where the Express server may not have /api prefix.
   app.use((req, _res, next) => {
-    const matched = (req.headers['x-matched-path'] || req.headers['x-forwarded-uri']) as string | undefined;
-    if (matched && matched.startsWith('/api')) {
-      req.url = matched;
+    // Prefer x-forwarded-uri (original client path) when set by a reverse proxy
+    const forwarded = req.headers['x-forwarded-uri'] as string | undefined;
+    if (forwarded && forwarded.startsWith('/api')) {
+      req.url = forwarded;
     } else if (!req.url.startsWith('/api')) {
       req.url = `/api${req.url.startsWith('/') ? '' : '/'}${req.url}`;
     }
@@ -69,6 +73,14 @@ export function createApp(): Express {
   app.use('/api/digital-marketing', digitalMarketingRoutes);
   app.use('/api/admin/retention', retentionRoutes);
   app.use('/api/cron', cronRoutes);
+
+  // Catch-all 404 for unmatched API routes — return JSON, not HTML
+  app.use('/api', (req, res) => {
+    res.status(404).json({
+      success: false,
+      message: `API endpoint not found: ${req.method} ${req.url}`,
+    });
+  });
 
   // Global Error Handler
   app.use(errorHandler);

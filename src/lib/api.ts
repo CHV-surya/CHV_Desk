@@ -46,11 +46,26 @@ async function request<T = any>(
 
   try {
     const response = await fetch(url, config);
-    const result: ApiResponse<T> = await response.json().catch(() => ({
-      success: false,
-      message: 'Failed to parse JSON response',
-      data: null as any,
-    }));
+    const contentType = response.headers.get('content-type') || '';
+    let result: ApiResponse<T>;
+
+    if (contentType.includes('application/json')) {
+      result = await response.json().catch(() => ({
+        success: false,
+        message: 'Failed to parse JSON response',
+        data: null as any,
+      }));
+    } else {
+      const text = await response.text().catch(() => '');
+      const isProxyError = response.status === 502 || response.status === 503 || response.status === 504;
+      result = {
+        success: false,
+        message: isProxyError
+          ? 'Backend server is unreachable (Connection Refused). Please ensure the backend server is running on port 5000.'
+          : (response.status ? `Request failed (${response.status}): ${text.slice(0, 120) || response.statusText}` : 'Failed to parse JSON response'),
+        data: null as any,
+      };
+    }
 
     if (!response.ok || !result.success) {
       throw new ApiError(

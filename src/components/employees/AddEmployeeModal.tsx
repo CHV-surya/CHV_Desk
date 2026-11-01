@@ -119,7 +119,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
           ? 'Register a manager and configure supervised department permissions'
           : 'Register an employee and configure department permissions'
       }
-      maxWidth="md"
+      maxWidth="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
@@ -129,10 +129,10 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
           </div>
         )}
 
-        {/* Role Selection (Prominently placed near the top before Full Name) */}
-        <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1.5">
-            Role Selection <span className="text-rose-500">*</span>
+        {/* Role Selection — prominent card at the very top */}
+        <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl">
+          <label className="block text-sm font-extrabold text-slate-800 mb-2.5 tracking-tight">
+            Account Role <span className="text-rose-500">*</span>
           </label>
           <div className="grid grid-cols-2 gap-3">
             <button

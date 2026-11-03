@@ -17,6 +17,7 @@ import { Attendance } from '../pages/admin/Attendance';
 import { RetentionPolicy } from '../pages/admin/RetentionPolicy';
 import { Settings } from '../pages/admin/Settings';
 import { AdminScheduler } from '../pages/admin/AdminScheduler';
+import { TaxInvoice } from '../pages/admin/TaxInvoice';
 
 // Manager Pages
 import { ManagerDashboard } from '../pages/manager/ManagerDashboard';
@@ -177,6 +178,14 @@ export const AppRoutes: React.FC = () => {
         element={
           <AdminRoute>
             <AdminScheduler />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/tax-invoice"
+        element={
+          <AdminRoute>
+            <TaxInvoice />
           </AdminRoute>
         }
       />

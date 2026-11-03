@@ -15,6 +15,7 @@ import {
   ChevronRight,
   TrendingUp,
   CalendarDays,
+  Receipt,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Avatar } from '../common/Avatar';
@@ -45,6 +46,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
         { name: 'Projects', path: '/admin/projects', icon: FolderKanban },
         { name: 'Digital Marketing', path: '/admin/digital-marketing', icon: TrendingUp },
         { name: 'Scheduler', path: '/admin/scheduler', icon: CalendarDays },
+        { name: 'Tax Invoice', path: '/admin/tax-invoice', icon: Receipt },
       ],
     },
     {

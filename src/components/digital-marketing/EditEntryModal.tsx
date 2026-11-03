@@ -15,6 +15,7 @@ interface EditEntryModalProps {
       editing?: boolean | null;
       clientConfirmation?: boolean | null;
       scheduled?: boolean | null;
+      budget?: number | null;
       scheduledDate?: string | null;
       adCampaignReportUrl?: string | null;
     }
@@ -34,6 +35,7 @@ export const EditEntryModal: React.FC<EditEntryModalProps> = ({
     'NONE'
   );
   const [scheduled, setScheduled] = useState<'NONE' | 'YES' | 'NO'>('NONE');
+  const [budget, setBudget] = useState('');
   const [scheduledDate, setScheduledDate] = useState('');
   const [adCampaignReportUrl, setAdCampaignReportUrl] = useState('');
 
@@ -59,6 +61,7 @@ export const EditEntryModal: React.FC<EditEntryModalProps> = ({
       setScheduled(
         entry.scheduled === true ? 'YES' : entry.scheduled === false ? 'NO' : 'NONE'
       );
+      setBudget(entry.budget !== undefined && entry.budget !== null ? String(entry.budget) : '');
       setScheduledDate(entry.scheduledDate || '');
       setAdCampaignReportUrl(entry.adCampaignReportUrl || '');
       setError(null);
@@ -89,6 +92,7 @@ export const EditEntryModal: React.FC<EditEntryModalProps> = ({
         editing: parseTriState(editing),
         clientConfirmation: parseTriState(clientConfirmation),
         scheduled: parseTriState(scheduled),
+        budget: budget !== '' && !isNaN(Number(budget)) ? Number(budget) : null,
         scheduledDate: scheduledDate || null,
         adCampaignReportUrl: adCampaignReportUrl.trim() || null,
       });
@@ -196,8 +200,28 @@ export const EditEntryModal: React.FC<EditEntryModalProps> = ({
           </div>
         </div>
 
-        {/* Date and Report URL */}
+        {/* Budget & Date */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Budget (₹)
+            </label>
+            <div className="relative">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">
+                ₹
+              </span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={budget}
+                onChange={(e) => setBudget(e.target.value)}
+                placeholder="0.00"
+                className="w-full pl-8 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 font-mono font-medium"
+              />
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Scheduled Date
@@ -209,19 +233,20 @@ export const EditEntryModal: React.FC<EditEntryModalProps> = ({
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 font-mono"
             />
           </div>
+        </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Ad Campaign Report URL
-            </label>
-            <input
-              type="url"
-              value={adCampaignReportUrl}
-              onChange={(e) => setAdCampaignReportUrl(e.target.value)}
-              placeholder="https://..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 font-mono text-xs"
-            />
-          </div>
+        {/* Ad Campaign Report URL */}
+        <div>
+          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+            Ad Campaign Report URL
+          </label>
+          <input
+            type="url"
+            value={adCampaignReportUrl}
+            onChange={(e) => setAdCampaignReportUrl(e.target.value)}
+            placeholder="https://..."
+            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 font-mono text-xs"
+          />
         </div>
 
         {/* Buttons */}

@@ -134,8 +134,7 @@ export const ContentSectionTable: React.FC<ContentSectionTableProps> = ({
           <thead>
             <tr className="bg-orange-50/80 border-b border-orange-200 text-xs font-extrabold text-orange-950 uppercase tracking-wider">
               <th className="py-3.5 px-5 min-w-[220px]">
-                {/* As per spec: column header is always Video Content */}
-                Video Content
+                {contentType === 'video' ? 'Video Content' : 'Poster Content'}
               </th>
               <th className="py-3.5 px-3.5 text-center min-w-[110px]">Video Shoot</th>
               <th className="py-3.5 px-3.5 text-center min-w-[100px]">Editing</th>
@@ -143,6 +142,7 @@ export const ContentSectionTable: React.FC<ContentSectionTableProps> = ({
                 Client Confirmation
               </th>
               <th className="py-3.5 px-3.5 text-center min-w-[110px]">Scheduled</th>
+              <th className="py-3.5 px-3.5 text-center min-w-[120px]">Budget</th>
               <th className="py-3.5 px-3.5 text-center min-w-[130px]">Date</th>
               <th className="py-3.5 px-4 min-w-[220px]">Ad Campaign Report</th>
               {!isReadOnly && <th className="py-3.5 px-5 text-right min-w-[100px]">Actions</th>}
@@ -151,7 +151,7 @@ export const ContentSectionTable: React.FC<ContentSectionTableProps> = ({
           <tbody className="divide-y divide-slate-100">
             {entries.length === 0 ? (
               <tr>
-                <td colSpan={isReadOnly ? 7 : 8} className="py-14 text-center text-slate-400">
+                <td colSpan={isReadOnly ? 8 : 9} className="py-14 text-center text-slate-400">
                   <div className="flex flex-col items-center justify-center">
                     <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-400 mb-3 shadow-2xs">
                       <Sparkles className="w-6 h-6 text-orange-400" />
@@ -226,7 +226,18 @@ export const ContentSectionTable: React.FC<ContentSectionTableProps> = ({
                       {renderStatusDropdown(entry, 'scheduled', entry.scheduled)}
                     </td>
 
-                    {/* 6. Date */}
+                    {/* 6. Budget */}
+                    <td className="py-3.5 px-3.5 text-center font-mono text-xs font-bold text-slate-800 whitespace-nowrap">
+                      {entry.budget !== null && entry.budget !== undefined && entry.budget !== '' ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          ₹{Number(entry.budget).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300">-</span>
+                      )}
+                    </td>
+
+                    {/* 7. Date */}
                     <td className="py-3.5 px-3.5 text-center font-mono text-xs text-slate-600 font-medium whitespace-nowrap">
                       {entry.scheduledDate ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200">
@@ -238,7 +249,7 @@ export const ContentSectionTable: React.FC<ContentSectionTableProps> = ({
                       )}
                     </td>
 
-                    {/* 7. Ad Campaign Report URL */}
+                    {/* 8. Ad Campaign Report URL */}
                     <td className="py-3.5 px-4">
                       {entry.adCampaignReportUrl ? (
                         isValidUrl ? (

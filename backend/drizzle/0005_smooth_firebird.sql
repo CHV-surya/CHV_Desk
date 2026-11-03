@@ -1,0 +1,1 @@
+ALTER TABLE "digital_marketing_entries" ADD COLUMN "budget" numeric(12, 2);

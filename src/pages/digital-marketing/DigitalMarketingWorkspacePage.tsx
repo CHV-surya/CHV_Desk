@@ -178,6 +178,7 @@ export const DigitalMarketingWorkspacePage: React.FC = () => {
     editing?: boolean | null;
     clientConfirmation?: boolean | null;
     scheduled?: boolean | null;
+    budget?: number | null;
     scheduledDate?: string | null;
     adCampaignReportUrl?: string | null;
   }) => {
@@ -207,6 +208,7 @@ export const DigitalMarketingWorkspacePage: React.FC = () => {
       editing?: boolean | null;
       clientConfirmation?: boolean | null;
       scheduled?: boolean | null;
+      budget?: number | null;
       scheduledDate?: string | null;
       adCampaignReportUrl?: string | null;
     }

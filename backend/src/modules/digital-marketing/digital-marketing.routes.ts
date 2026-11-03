@@ -20,6 +20,15 @@ const updateTargetsSchema = z.object({
   posterTarget: z.number().int().min(0).optional(),
 });
 
+const budgetSchema = z.preprocess((val) => {
+  if (val === '' || val === undefined || val === null) return null;
+  if (typeof val === 'string') {
+    const parsed = Number(val);
+    return isNaN(parsed) ? val : parsed;
+  }
+  return val;
+}, z.number().nonnegative('Budget must be a non-negative number').nullable().optional());
+
 const addEntrySchema = z.object({
   contentType: z.enum(['video', 'poster']),
   contentName: z.string().min(1, 'Content name is required'),
@@ -27,6 +36,7 @@ const addEntrySchema = z.object({
   editing: z.boolean().nullable().optional(),
   clientConfirmation: z.boolean().nullable().optional(),
   scheduled: z.boolean().nullable().optional(),
+  budget: budgetSchema,
   scheduledDate: z.string().nullable().optional(),
   adCampaignReportUrl: z.string().nullable().optional(),
 });
@@ -37,6 +47,7 @@ const updateEntrySchema = z.object({
   editing: z.boolean().nullable().optional(),
   clientConfirmation: z.boolean().nullable().optional(),
   scheduled: z.boolean().nullable().optional(),
+  budget: budgetSchema,
   scheduledDate: z.string().nullable().optional(),
   adCampaignReportUrl: z.string().nullable().optional(),
 });

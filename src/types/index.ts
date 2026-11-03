@@ -93,6 +93,7 @@ export interface DigitalMarketingEntry {
   editing: boolean | null;
   clientConfirmation: boolean | null;
   scheduled: boolean | null;
+  budget?: number | string | null;
   scheduledDate: string | null;
   adCampaignReportUrl: string | null;
   createdAt: string;

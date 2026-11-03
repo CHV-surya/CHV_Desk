@@ -485,6 +485,7 @@ export async function getOrCreateProjectMonth(
       editing: e.editing,
       clientConfirmation: e.clientConfirmation,
       scheduled: e.scheduled,
+      budget: e.budget !== null && e.budget !== undefined ? Number(e.budget) : null,
       scheduledDate: e.scheduledDate,
       adCampaignReportUrl: e.adCampaignReportUrl,
       createdAt: formatDateIST(e.createdAt) || '',
@@ -563,6 +564,7 @@ export async function getMonthEntries(
     editing: e.editing,
     clientConfirmation: e.clientConfirmation,
     scheduled: e.scheduled,
+    budget: e.budget !== null && e.budget !== undefined ? Number(e.budget) : null,
     scheduledDate: e.scheduledDate,
     adCampaignReportUrl: e.adCampaignReportUrl,
     createdAt: formatDateIST(e.createdAt) || '',
@@ -582,6 +584,7 @@ export async function addEntry(
     editing?: boolean | null;
     clientConfirmation?: boolean | null;
     scheduled?: boolean | null;
+    budget?: number | string | null;
     scheduledDate?: string | null;
     adCampaignReportUrl?: string | null;
   },
@@ -601,6 +604,10 @@ export async function addEntry(
       clientConfirmation:
         data.clientConfirmation !== undefined ? data.clientConfirmation : null,
       scheduled: data.scheduled !== undefined ? data.scheduled : null,
+      budget:
+        data.budget !== undefined && data.budget !== null && data.budget !== ''
+          ? String(data.budget)
+          : null,
       scheduledDate: data.scheduledDate ? data.scheduledDate : null,
       adCampaignReportUrl: data.adCampaignReportUrl
         ? data.adCampaignReportUrl.trim()
@@ -617,6 +624,10 @@ export async function addEntry(
     editing: created.editing,
     clientConfirmation: created.clientConfirmation,
     scheduled: created.scheduled,
+    budget:
+      created.budget !== null && created.budget !== undefined
+        ? Number(created.budget)
+        : null,
     scheduledDate: created.scheduledDate,
     adCampaignReportUrl: created.adCampaignReportUrl,
     createdAt: formatDateIST(created.createdAt) || '',
@@ -635,6 +646,7 @@ export async function updateEntry(
     editing?: boolean | null;
     clientConfirmation?: boolean | null;
     scheduled?: boolean | null;
+    budget?: number | string | null;
     scheduledDate?: string | null;
     adCampaignReportUrl?: string | null;
   },
@@ -662,6 +674,10 @@ export async function updateEntry(
   if (data.scheduled !== undefined) {
     updates.scheduled = data.scheduled;
   }
+  if (data.budget !== undefined) {
+    updates.budget =
+      data.budget !== null && data.budget !== '' ? String(data.budget) : null;
+  }
   if (data.scheduledDate !== undefined) {
     updates.scheduledDate = data.scheduledDate || null;
   }
@@ -686,6 +702,10 @@ export async function updateEntry(
     editing: updated.editing,
     clientConfirmation: updated.clientConfirmation,
     scheduled: updated.scheduled,
+    budget:
+      updated.budget !== null && updated.budget !== undefined
+        ? Number(updated.budget)
+        : null,
     scheduledDate: updated.scheduledDate,
     adCampaignReportUrl: updated.adCampaignReportUrl,
     createdAt: formatDateIST(updated.createdAt) || '',
@@ -745,13 +765,14 @@ export async function exportMonthlyReportToExcel(
 
   // Column definitions & widths
   worksheet.columns = [
-    { key: 'col1', width: 34 }, // Video Content
+    { key: 'col1', width: 34 }, // Video Content / Poster Content
     { key: 'col2', width: 16 }, // Video Shoot
     { key: 'col3', width: 16 }, // Editing
     { key: 'col4', width: 22 }, // Client Confirmation
     { key: 'col5', width: 16 }, // Scheduled
-    { key: 'col6', width: 16 }, // Date
-    { key: 'col7', width: 36 }, // Ad Campaign Report
+    { key: 'col6', width: 18 }, // Budget
+    { key: 'col7', width: 16 }, // Date
+    { key: 'col8', width: 36 }, // Ad Campaign Report
   ];
 
   // Helper colors
@@ -800,10 +821,21 @@ export async function exportMonthlyReportToExcel(
     return '-';
   };
 
+  // Helper to format currency in Indian Rupees
+  const formatBudget = (val: number | string | null | undefined): string => {
+    if (val !== null && val !== undefined && val !== '') {
+      const num = Number(val);
+      if (!isNaN(num)) {
+        return `₹${num.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+      }
+    }
+    return '-';
+  };
+
   let currentRowIdx = 1;
 
   // 1. Title Banner
-  worksheet.mergeCells(`A${currentRowIdx}:G${currentRowIdx}`);
+  worksheet.mergeCells(`A${currentRowIdx}:H${currentRowIdx}`);
   const titleCell = worksheet.getCell(`A${currentRowIdx}`);
   titleCell.value = `WORKTRACK — DIGITAL MARKETING MONTHLY REPORT`;
   titleCell.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
@@ -819,7 +851,7 @@ export async function exportMonthlyReportToExcel(
   projectCell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF1E293B' } };
   projectCell.alignment = { horizontal: 'left', vertical: 'middle' };
 
-  worksheet.mergeCells(`E${currentRowIdx}:G${currentRowIdx}`);
+  worksheet.mergeCells(`E${currentRowIdx}:H${currentRowIdx}`);
   const monthCell = worksheet.getCell(`E${currentRowIdx}`);
   monthCell.value = `Reporting Period: ${monthName} ${month.year}`;
   monthCell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF1E293B' } };
@@ -828,7 +860,7 @@ export async function exportMonthlyReportToExcel(
   currentRowIdx++;
 
   // 3. Targets Summary Row
-  worksheet.mergeCells(`A${currentRowIdx}:C${currentRowIdx}`);
+  worksheet.mergeCells(`A${currentRowIdx}:D${currentRowIdx}`);
   const videoTargetCell = worksheet.getCell(`A${currentRowIdx}`);
   videoTargetCell.value = `Video Target: ${month.videoTarget} | Added: ${videoEntries.length} | Progress: ${
     month.videoTarget > 0 ? Math.round((videoEntries.length / month.videoTarget) * 100) : 0
@@ -837,8 +869,8 @@ export async function exportMonthlyReportToExcel(
   videoTargetCell.fill = STATS_FILL;
   videoTargetCell.alignment = { horizontal: 'left', vertical: 'middle' };
 
-  worksheet.mergeCells(`D${currentRowIdx}:G${currentRowIdx}`);
-  const posterTargetCell = worksheet.getCell(`D${currentRowIdx}`);
+  worksheet.mergeCells(`E${currentRowIdx}:H${currentRowIdx}`);
+  const posterTargetCell = worksheet.getCell(`E${currentRowIdx}`);
   posterTargetCell.value = `Poster Target: ${month.posterTarget} | Added: ${posterEntries.length} | Progress: ${
     month.posterTarget > 0 ? Math.round((posterEntries.length / month.posterTarget) * 100) : 0
   }%`;
@@ -854,7 +886,7 @@ export async function exportMonthlyReportToExcel(
   // ==========================================
   // SECTION 1: VIDEOS
   // ==========================================
-  worksheet.mergeCells(`A${currentRowIdx}:G${currentRowIdx}`);
+  worksheet.mergeCells(`A${currentRowIdx}:H${currentRowIdx}`);
   const videoSectionCell = worksheet.getCell(`A${currentRowIdx}`);
   videoSectionCell.value = `VIDEOS`;
   videoSectionCell.font = { name: 'Arial', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
@@ -864,24 +896,25 @@ export async function exportMonthlyReportToExcel(
   currentRowIdx++;
 
   // Column Headers for Videos
-  const headers = [
+  const videoHeaders = [
     'Video Content',
     'Video Shoot',
     'Editing',
     'Client Confirmation',
     'Scheduled',
+    'Budget',
     'Date',
     'Ad Campaign Report',
   ];
 
   const headerRow = worksheet.getRow(currentRowIdx);
-  headers.forEach((h, idx) => {
+  videoHeaders.forEach((h, idx) => {
     const cell = headerRow.getCell(idx + 1);
     cell.value = h;
     cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
     cell.fill = ORANGE_SUBHEADER_FILL;
     cell.alignment = {
-      horizontal: idx === 0 || idx === 6 ? 'left' : 'center',
+      horizontal: idx === 0 || idx === 7 ? 'left' : 'center',
       vertical: 'middle',
     };
     cell.border = BOLD_BORDER;
@@ -891,7 +924,7 @@ export async function exportMonthlyReportToExcel(
 
   // Video Data Rows
   if (videoEntries.length === 0) {
-    worksheet.mergeCells(`A${currentRowIdx}:G${currentRowIdx}`);
+    worksheet.mergeCells(`A${currentRowIdx}:H${currentRowIdx}`);
     const emptyCell = worksheet.getCell(`A${currentRowIdx}`);
     emptyCell.value = 'No video entries recorded for this month.';
     emptyCell.font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FF94A3B8' } };
@@ -907,10 +940,11 @@ export async function exportMonthlyReportToExcel(
       row.getCell(3).value = formatYesNo(entry.editing);
       row.getCell(4).value = formatYesNo(entry.clientConfirmation);
       row.getCell(5).value = formatYesNo(entry.scheduled);
-      row.getCell(6).value = entry.scheduledDate || '-';
+      row.getCell(6).value = formatBudget(entry.budget);
+      row.getCell(7).value = entry.scheduledDate || '-';
 
       // Report URL (Clickable hyperlink)
-      const reportCell = row.getCell(7);
+      const reportCell = row.getCell(8);
       if (entry.adCampaignReportUrl && entry.adCampaignReportUrl.startsWith('http')) {
         reportCell.value = {
           text: entry.adCampaignReportUrl,
@@ -924,13 +958,13 @@ export async function exportMonthlyReportToExcel(
       }
 
       // Styles & borders
-      for (let c = 1; c <= 7; c++) {
+      for (let c = 1; c <= 8; c++) {
         const cell = row.getCell(c);
-        if (c !== 7 || !entry.adCampaignReportUrl?.startsWith('http')) {
+        if (c !== 8 || !entry.adCampaignReportUrl?.startsWith('http')) {
           cell.font = { name: 'Arial', size: 10 };
         }
         cell.alignment = {
-          horizontal: c === 1 || c === 7 ? 'left' : 'center',
+          horizontal: c === 1 || c === 8 ? 'left' : 'center',
           vertical: 'middle',
         };
         cell.border = THIN_BORDER;
@@ -956,7 +990,7 @@ export async function exportMonthlyReportToExcel(
   // ==========================================
   // SECTION 2: POSTERS
   // ==========================================
-  worksheet.mergeCells(`A${currentRowIdx}:G${currentRowIdx}`);
+  worksheet.mergeCells(`A${currentRowIdx}:H${currentRowIdx}`);
   const posterSectionCell = worksheet.getCell(`A${currentRowIdx}`);
   posterSectionCell.value = `POSTERS`;
   posterSectionCell.font = { name: 'Arial', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
@@ -965,15 +999,26 @@ export async function exportMonthlyReportToExcel(
   worksheet.getRow(currentRowIdx).height = 30;
   currentRowIdx++;
 
-  // Headers for Posters (Same structure as Videos)
+  // Headers for Posters (Exact column order: Poster Content, Video Shoot, Editing, Client Confirmation, Scheduled, Budget, Date, Ad Campaign Report)
+  const posterHeaders = [
+    'Poster Content',
+    'Video Shoot',
+    'Editing',
+    'Client Confirmation',
+    'Scheduled',
+    'Budget',
+    'Date',
+    'Ad Campaign Report',
+  ];
+
   const posterHeaderRow = worksheet.getRow(currentRowIdx);
-  headers.forEach((h, idx) => {
+  posterHeaders.forEach((h, idx) => {
     const cell = posterHeaderRow.getCell(idx + 1);
     cell.value = h;
     cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
     cell.fill = ORANGE_SUBHEADER_FILL;
     cell.alignment = {
-      horizontal: idx === 0 || idx === 6 ? 'left' : 'center',
+      horizontal: idx === 0 || idx === 7 ? 'left' : 'center',
       vertical: 'middle',
     };
     cell.border = BOLD_BORDER;
@@ -983,7 +1028,7 @@ export async function exportMonthlyReportToExcel(
 
   // Poster Data Rows
   if (posterEntries.length === 0) {
-    worksheet.mergeCells(`A${currentRowIdx}:G${currentRowIdx}`);
+    worksheet.mergeCells(`A${currentRowIdx}:H${currentRowIdx}`);
     const emptyCell = worksheet.getCell(`A${currentRowIdx}`);
     emptyCell.value = 'No poster entries recorded for this month.';
     emptyCell.font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FF94A3B8' } };
@@ -999,10 +1044,11 @@ export async function exportMonthlyReportToExcel(
       row.getCell(3).value = formatYesNo(entry.editing);
       row.getCell(4).value = formatYesNo(entry.clientConfirmation);
       row.getCell(5).value = formatYesNo(entry.scheduled);
-      row.getCell(6).value = entry.scheduledDate || '-';
+      row.getCell(6).value = formatBudget(entry.budget);
+      row.getCell(7).value = entry.scheduledDate || '-';
 
       // Report URL
-      const reportCell = row.getCell(7);
+      const reportCell = row.getCell(8);
       if (entry.adCampaignReportUrl && entry.adCampaignReportUrl.startsWith('http')) {
         reportCell.value = {
           text: entry.adCampaignReportUrl,
@@ -1016,13 +1062,13 @@ export async function exportMonthlyReportToExcel(
       }
 
       // Styles & borders
-      for (let c = 1; c <= 7; c++) {
+      for (let c = 1; c <= 8; c++) {
         const cell = row.getCell(c);
-        if (c !== 7 || !entry.adCampaignReportUrl?.startsWith('http')) {
+        if (c !== 8 || !entry.adCampaignReportUrl?.startsWith('http')) {
           cell.font = { name: 'Arial', size: 10 };
         }
         cell.alignment = {
-          horizontal: c === 1 || c === 7 ? 'left' : 'center',
+          horizontal: c === 1 || c === 8 ? 'left' : 'center',
           vertical: 'middle',
         };
         cell.border = THIN_BORDER;

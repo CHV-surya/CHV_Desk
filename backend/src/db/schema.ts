@@ -7,6 +7,7 @@ import {
   timestamp,
   date,
   integer,
+  numeric,
   pgEnum,
   uniqueIndex,
   index,
@@ -161,6 +162,7 @@ export const digitalMarketingEntries = pgTable(
     editing: boolean('editing'), // null = not set, true = YES, false = NO
     clientConfirmation: boolean('client_confirmation'), // null = not set, true = YES, false = NO
     scheduled: boolean('scheduled'), // null = not set, true = YES, false = NO
+    budget: numeric('budget', { precision: 12, scale: 2 }),
     scheduledDate: date('scheduled_date'), // YYYY-MM-DD
     adCampaignReportUrl: text('ad_campaign_report_url'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

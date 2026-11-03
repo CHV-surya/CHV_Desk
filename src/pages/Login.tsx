@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Lock, User, AlertCircle, ArrowRight, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/common/Button';
+import chvappsLogo from '../assets/chvapps-logo.png';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -61,8 +62,8 @@ export const Login: React.FC = () => {
       <div className="w-full max-w-md relative z-10">
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-lg mb-4 font-extrabold text-2xl tracking-wider">
-            W
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white shadow-xl mb-4 p-2.5 border border-white/30 backdrop-blur-sm">
+            <img src={chvappsLogo} alt="CHVApps Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight flex items-center justify-center gap-2.5">
             WorkTrack

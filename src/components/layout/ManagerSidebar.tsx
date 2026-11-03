@@ -17,6 +17,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
 import { Avatar } from '../common/Avatar';
+import chvappsLogo from '../../assets/chvapps-logo.png';
 
 interface ManagerSidebarProps {
   isOpen: boolean;
@@ -79,8 +80,8 @@ export const ManagerSidebar: React.FC<ManagerSidebarProps> = ({ isOpen, onClose 
         {/* Brand Header */}
         <div className="flex items-center justify-between h-18 px-5 border-b border-white/[0.08] bg-[#0f1d3f]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white shadow-md font-extrabold text-base tracking-wider">
-              W
+            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center p-1 shadow-md shrink-0 border border-white/20">
+              <img src={chvappsLogo} alt="CHVApps Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">

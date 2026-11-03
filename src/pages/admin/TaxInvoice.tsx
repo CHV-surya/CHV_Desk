@@ -594,14 +594,14 @@ export const TaxInvoice: React.FC = () => {
                   <div className="w-full h-full relative overflow-y-auto" style={{ fontSize: '0.52em' }}>
                     {/* ─── Top-left blue decorative corner ─── */}
                     <div
-                      className="absolute top-0 left-0 w-14 h-14 bg-[#0F2149]"
+                      className="absolute top-0 left-0 w-8 h-8 bg-[#0F2149]"
                       style={{
                         clipPath: 'polygon(0 0, 100% 0, 0 100%)',
                         zIndex: 0,
                       }}
                     />
                     <div
-                      className="absolute top-0 left-0 w-12 h-12 border-r-2 border-b-2 border-[#0EA5E9]"
+                      className="absolute top-0 left-0 w-7 h-7 border-r border-b border-[#0EA5E9]"
                       style={{
                         borderRadius: '0 0 100% 0',
                         zIndex: 0,
@@ -609,29 +609,27 @@ export const TaxInvoice: React.FC = () => {
                     />
 
                     {/* ─── Header area ─── */}
-                    <div className="relative z-10 px-5 pt-4 pb-3">
+                    <div className="relative z-10 px-5 pt-3 pb-2">
                       <div className="flex items-start justify-between">
-                        {/* Logo + Company */}
-                        <div className="flex items-center gap-2.5">
+                        {/* Logo + Company (Centered in header) */}
+                        <div className="flex-1 flex flex-col items-center justify-center pr-2">
                           {logoBase64 ? (
-                            <img src={logoBase64} alt="Logo" className="w-8 h-8 object-contain" />
+                            <img src={logoBase64} alt="Logo" className="w-7 h-7 object-contain mb-1" />
                           ) : (
-                            <div className="w-8 h-8 rounded bg-gradient-to-br from-[#0EA5E9] via-[#2563EB] to-[#0F2149] flex items-center justify-center text-white font-black text-sm shadow">
+                            <div className="w-7 h-7 rounded bg-gradient-to-br from-[#0EA5E9] via-[#2563EB] to-[#0F2149] flex items-center justify-center text-white font-black text-xs shadow mb-1">
                               C
                             </div>
                           )}
-                          <div>
-                            <div className="text-[13px] font-black text-[#0F2149] tracking-tight leading-tight">
-                              {companyName || 'CHVAPPS LLP'}
-                            </div>
-                            <div className="text-[8px] text-slate-500 italic mt-0.5">
-                              {tagline || 'Your Vision, Our Innovation'}
-                            </div>
+                          <div className="text-[12px] font-black text-[#0F2149] tracking-tight leading-tight text-center">
+                            {companyName || 'CHVAPPS LLP'}
+                          </div>
+                          <div className="text-[7.5px] text-slate-500 italic mt-0.5 text-center">
+                            {tagline || 'Your Vision, Our Innovation'}
                           </div>
                         </div>
 
                         {/* TAX INVOICE banner */}
-                        <div className="bg-[#0F2149] px-3.5 py-1 rounded-md shadow-sm relative overflow-hidden flex items-center">
+                        <div className="bg-[#0F2149] px-3.5 py-1 rounded-md shadow-sm relative overflow-hidden flex items-center shrink-0 mt-1">
                           <span className="text-white font-black text-[10px] tracking-wider pr-2">
                             TAX INVOICE
                           </span>

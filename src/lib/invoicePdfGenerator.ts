@@ -192,46 +192,57 @@ export function generateInvoicePDF(data: InvoiceData): void {
   let y = 0;
 
   // ─── TOP DECORATIVE SWEEPS / CORNERS ───
-  // Top-left curved blue corner matching reference
+  // Top-left curved blue corner matching reference (kept tightly to the far top-left edge)
   doc.setFillColor(...NAVY);
-  doc.circle(0, 0, 42, 'F');
+  doc.circle(0, 0, 20, 'F');
 
   // Cyan inner accent ring on the sweep
   doc.setDrawColor(...CYAN);
-  doc.setLineWidth(1.2);
-  doc.circle(0, 0, 40, 'S');
+  doc.setLineWidth(0.8);
+  doc.circle(0, 0, 18.5, 'S');
 
   // ─── COMPANY HEADER & LOGO ───
-  const headerY = 16;
-  const logoX = margin + 3;
+  // Centered in the header area between left corner (X=20) and TAX INVOICE banner (X=136)
+  const headerCenterX = 78;
+  const logoSize = 12;
+  const logoTopY = 6;
 
   if (data.logoBase64) {
     try {
-      doc.addImage(data.logoBase64, 'JPEG', logoX, headerY - 5, 14, 14, undefined, 'FAST');
+      doc.addImage(
+        data.logoBase64,
+        'JPEG',
+        headerCenterX - logoSize / 2,
+        logoTopY,
+        logoSize,
+        logoSize,
+        undefined,
+        'FAST'
+      );
     } catch {
-      drawChvappsHexLogo(doc, logoX, headerY - 5, 14);
+      drawChvappsHexLogo(doc, headerCenterX - logoSize / 2, logoTopY, logoSize);
     }
   } else {
-    drawChvappsHexLogo(doc, logoX, headerY - 5, 14);
+    drawChvappsHexLogo(doc, headerCenterX - logoSize / 2, logoTopY, logoSize);
   }
 
-  // Company Name
+  // Company Name - centered directly below logo
   doc.setFont('Roboto', 'bold');
-  doc.setFontSize(19);
+  doc.setFontSize(17);
   doc.setTextColor(...NAVY);
-  doc.text(data.companyName || 'CHVAPPS LLP', logoX + 17, headerY + 1);
+  doc.text(data.companyName || 'CHVAPPS LLP', headerCenterX, 22.5, { align: 'center' });
 
-  // Tagline
+  // Tagline - centered directly below company name
   doc.setFont('Roboto', 'normal');
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.setTextColor(...TEXT_MUTED);
-  doc.text(data.tagline || 'Your Vision, Our Innovation', logoX + 17, headerY + 6.5);
+  doc.text(data.tagline || 'Your Vision, Our Innovation', headerCenterX, 26.5, { align: 'center' });
 
   // ─── "TAX INVOICE" TOP-RIGHT BANNER ───
   const bannerWidth = 62;
   const bannerHeight = 11.5;
   const bannerX = pageWidth - margin - bannerWidth;
-  const bannerY = headerY - 6;
+  const bannerY = 10;
 
   // Navy banner capsule
   doc.setFillColor(...NAVY);

@@ -72,7 +72,6 @@ export const BdaImportModal: React.FC<BdaImportModalProps> = ({
       setIsUploading(true);
       setErrorMessage('');
 
-      // Read file as base64 string
       const reader = new FileReader();
       const base64Promise = new Promise<string>((resolve, reject) => {
         reader.onload = () => resolve(reader.result as string);
@@ -111,16 +110,16 @@ export const BdaImportModal: React.FC<BdaImportModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-150">
-      <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-8">
+      <div className="relative w-full max-w-2xl bg-white rounded-2xl border border-[#E2E8F0] shadow-2xl overflow-hidden my-8">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-[#0F2A4A] text-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E2E8F0] bg-[#0F2A4A] text-white">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-white/10 border border-white/15">
               <UploadCloud className="w-5 h-5 text-blue-300" />
             </div>
             <div>
               <h2 className="text-lg font-bold tracking-tight">
-                Import & Synchronize Customer Excel
+                Import &amp; Synchronize Customer Excel
               </h2>
               <p className="text-xs text-blue-200/80">
                 Update customer records, follow-up statuses, and remarks offline
@@ -139,7 +138,7 @@ export const BdaImportModal: React.FC<BdaImportModalProps> = ({
         {/* Content */}
         <div className="p-6 space-y-4 max-h-[calc(85vh-120px)] overflow-y-auto">
           {errorMessage && (
-            <div className="flex items-start gap-2.5 p-3.5 text-sm text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded-xl">
+            <div className="flex items-start gap-2.5 p-3.5 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <div>{errorMessage}</div>
             </div>
@@ -154,8 +153,8 @@ export const BdaImportModal: React.FC<BdaImportModalProps> = ({
                 onClick={() => fileInputRef.current?.click()}
                 className={`flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${
                   selectedFile
-                    ? 'border-blue-500 bg-blue-50/40 dark:bg-blue-900/10'
-                    : 'border-slate-300 dark:border-slate-700 hover:border-blue-400 bg-slate-50 dark:bg-slate-800/40'
+                    ? 'border-[#2563EB] bg-blue-50/40'
+                    : 'border-[#E2E8F0] hover:border-blue-400 bg-slate-50'
                 }`}
               >
                 <input
@@ -168,10 +167,10 @@ export const BdaImportModal: React.FC<BdaImportModalProps> = ({
 
                 {selectedFile ? (
                   <div className="flex flex-col items-center text-center">
-                    <div className="p-3 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl mb-2">
+                    <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl mb-2">
                       <FileSpreadsheet className="w-8 h-8" />
                     </div>
-                    <span className="text-sm font-bold text-slate-900 dark:text-white">
+                    <span className="text-sm font-bold text-[#0F172A]">
                       {selectedFile.name}
                     </span>
                     <span className="text-xs text-slate-400 mt-0.5">
@@ -180,10 +179,10 @@ export const BdaImportModal: React.FC<BdaImportModalProps> = ({
                   </div>
                 ) : (
                   <div className="flex flex-col items-center text-center">
-                    <div className="p-3 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-2xl mb-2">
+                    <div className="p-3 bg-blue-50 text-[#2563EB] rounded-2xl mb-2">
                       <UploadCloud className="w-8 h-8" />
                     </div>
-                    <span className="text-sm font-semibold text-slate-800 dark:text-white">
+                    <span className="text-sm font-semibold text-[#0F172A]">
                       Click to choose an Excel file, or drag and drop here
                     </span>
                     <span className="text-xs text-slate-400 mt-1">
@@ -194,23 +193,23 @@ export const BdaImportModal: React.FC<BdaImportModalProps> = ({
               </div>
 
               {/* Informational Guidance */}
-              <div className="p-3.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/60 text-xs text-slate-600 dark:text-slate-300 space-y-1.5">
-                <div className="flex items-center gap-1.5 font-bold text-blue-900 dark:text-blue-200">
-                  <Info className="w-4 h-4 text-blue-600" />
+              <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200/60 text-xs text-[#64748B] space-y-1.5">
+                <div className="flex items-center gap-1.5 font-bold text-blue-900">
+                  <Info className="w-4 h-4 text-[#2563EB]" />
                   Offline Sync Rules:
                 </div>
-                <ul className="list-disc list-inside space-y-1 pl-1 text-[11px] text-slate-600 dark:text-slate-400">
+                <ul className="list-disc list-inside space-y-1 pl-1 text-[11px] text-[#64748B]">
                   <li>
-                    <strong className="text-slate-800 dark:text-slate-200">Record ID:</strong> Must not be altered. It matches rows to their database records.
+                    <strong className="text-[#0F172A]">Record ID:</strong> Must not be altered. It matches rows to their database records.
                   </li>
                   <li>
-                    <strong className="text-slate-800 dark:text-slate-200">Editable Fields:</strong> Phone Number, Email, Location, Required Software, Lead Source, Follow-up Status, Next Follow-up Date, Remarks.
+                    <strong className="text-[#0F172A]">Editable Fields:</strong> Phone Number, Email, Location, Required Software, Lead Source, Follow-up Status, Next Follow-up Date, Remarks.
                   </li>
                   <li>
-                    <strong className="text-slate-800 dark:text-slate-200">Follow-up Statuses:</strong> Must match: New, Pending, Interested, Quotation Sent, Call Back Requested, In Discussion, Converted, Not Interested.
+                    <strong className="text-[#0F172A]">Follow-up Statuses:</strong> Must match: New, Pending, Interested, Quotation Sent, Call Back Requested, In Discussion, Converted, Not Interested.
                   </li>
                   <li>
-                    <strong className="text-slate-800 dark:text-slate-200">No Duplication:</strong> Re-uploading an export will never duplicate customer records.
+                    <strong className="text-[#0F172A]">No Duplication:</strong> Re-uploading an export will never duplicate customer records.
                   </li>
                 </ul>
               </div>
@@ -218,10 +217,10 @@ export const BdaImportModal: React.FC<BdaImportModalProps> = ({
           ) : (
             /* Import Summary Report */
             <div className="space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between pb-2 border-b border-[#E2E8F0]">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                  <span className="font-bold text-slate-900 dark:text-white text-base">
+                  <span className="font-bold text-[#0F172A] text-base">
                     Synchronization Complete
                   </span>
                 </div>
@@ -231,7 +230,7 @@ export const BdaImportModal: React.FC<BdaImportModalProps> = ({
                     setSelectedFile(null);
                     setImportSummary(null);
                   }}
-                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                  className="text-xs font-semibold text-[#2563EB] hover:text-blue-700 flex items-center gap-1"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   Import Another File
@@ -240,34 +239,34 @@ export const BdaImportModal: React.FC<BdaImportModalProps> = ({
 
               {/* Metric Counts */}
               <div className="grid grid-cols-4 gap-2.5">
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-center border border-slate-200 dark:border-slate-700">
+                <div className="p-3 rounded-xl bg-slate-50 text-center border border-[#E2E8F0]">
                   <span className="text-[10px] uppercase font-bold text-slate-400">Total Rows</span>
-                  <p className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">
+                  <p className="text-xl font-bold text-[#0F172A] mt-0.5">
                     {importSummary.totalRows}
                   </p>
                 </div>
-                <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-center border border-emerald-200 dark:border-emerald-900">
+                <div className="p-3 rounded-xl bg-emerald-50 text-center border border-emerald-200">
                   <span className="text-[10px] uppercase font-bold text-emerald-600">Updated</span>
-                  <p className="text-xl font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">
+                  <p className="text-xl font-bold text-emerald-700 mt-0.5">
                     {importSummary.updatedCount}
                   </p>
                 </div>
-                <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 text-center border border-blue-200 dark:border-blue-900">
-                  <span className="text-[10px] uppercase font-bold text-blue-600">Unchanged</span>
-                  <p className="text-xl font-bold text-blue-700 dark:text-blue-400 mt-0.5">
+                <div className="p-3 rounded-xl bg-blue-50 text-center border border-blue-200">
+                  <span className="text-[10px] uppercase font-bold text-[#2563EB]">Unchanged</span>
+                  <p className="text-xl font-bold text-blue-700 mt-0.5">
                     {importSummary.unchangedCount}
                   </p>
                 </div>
-                <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 text-center border border-red-200 dark:border-red-900">
+                <div className="p-3 rounded-xl bg-red-50 text-center border border-red-200">
                   <span className="text-[10px] uppercase font-bold text-red-600">Failed</span>
-                  <p className="text-xl font-bold text-red-700 dark:text-red-400 mt-0.5">
+                  <p className="text-xl font-bold text-red-700 mt-0.5">
                     {importSummary.failedCount}
                   </p>
                 </div>
               </div>
 
               {/* Filter Tabs */}
-              <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-semibold">
+              <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl text-xs font-semibold">
                 {(['all', 'updated', 'unchanged', 'failed'] as const).map((tab) => (
                   <button
                     key={tab}
@@ -275,8 +274,8 @@ export const BdaImportModal: React.FC<BdaImportModalProps> = ({
                     onClick={() => setDetailsFilter(tab)}
                     className={`flex-1 py-1.5 px-2 rounded-lg capitalize transition-colors ${
                       detailsFilter === tab
-                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
-                        : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                        ? 'bg-white text-[#0F172A] shadow-xs'
+                        : 'text-[#64748B] hover:text-[#0F172A]'
                     }`}
                   >
                     {tab}
@@ -285,20 +284,20 @@ export const BdaImportModal: React.FC<BdaImportModalProps> = ({
               </div>
 
               {/* Row Log Details */}
-              <div className="max-h-60 overflow-y-auto space-y-1.5 border border-slate-200 dark:border-slate-800 rounded-xl p-2 bg-slate-50/50 dark:bg-slate-900/50">
+              <div className="max-h-60 overflow-y-auto space-y-1.5 border border-[#E2E8F0] rounded-xl p-2 bg-slate-50/50">
                 {filteredDetails && filteredDetails.length > 0 ? (
                   filteredDetails.map((detail, idx) => {
                     const badgeClass =
                       detail.status === 'updated'
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300'
+                        ? 'bg-emerald-100 text-emerald-800'
                         : detail.status === 'unchanged'
-                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
-                        : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300';
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-red-100 text-red-800';
 
                     return (
                       <div
                         key={idx}
-                        className="flex items-start justify-between gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/60 text-xs"
+                        className="flex items-start justify-between gap-2 p-2 rounded-lg bg-white border border-slate-100 text-xs"
                       >
                         <div className="flex items-start gap-2">
                           <span
@@ -308,11 +307,11 @@ export const BdaImportModal: React.FC<BdaImportModalProps> = ({
                           </span>
                           <div>
                             {detail.customerName && (
-                              <span className="font-bold text-slate-900 dark:text-white mr-1.5">
+                              <span className="font-bold text-[#0F172A] mr-1.5">
                                 {detail.customerName}:
                               </span>
                             )}
-                            <span className="text-slate-600 dark:text-slate-300">
+                            <span className="text-[#64748B]">
                               {detail.message}
                             </span>
                           </div>
@@ -331,11 +330,11 @@ export const BdaImportModal: React.FC<BdaImportModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#E2E8F0] bg-slate-50">
           <button
             type="button"
             onClick={resetModal}
-            className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors"
+            className="px-4 py-2 text-sm font-medium text-[#0F172A] hover:bg-slate-200 rounded-xl transition-colors"
           >
             {importSummary ? 'Done' : 'Cancel'}
           </button>
@@ -344,7 +343,7 @@ export const BdaImportModal: React.FC<BdaImportModalProps> = ({
               type="button"
               onClick={handleUpload}
               disabled={!selectedFile || isUploading}
-              className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 transition-all"
+              className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-[#2563EB] hover:bg-blue-700 rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 transition-all"
             >
               {isUploading ? (
                 <>

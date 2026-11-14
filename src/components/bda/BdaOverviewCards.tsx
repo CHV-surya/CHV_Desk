@@ -30,9 +30,8 @@ export const BdaOverviewCards: React.FC<BdaOverviewCardsProps> = ({
       title: 'Total Customers',
       count: summary?.total ?? 0,
       icon: Users,
-      color: 'blue',
-      bgColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-      borderColor: 'border-blue-200 dark:border-blue-900/40',
+      bgColor: 'bg-blue-50 text-blue-600',
+      borderColor: 'border-blue-200',
       activeRing: 'ring-2 ring-blue-500 shadow-md',
     },
     {
@@ -40,9 +39,8 @@ export const BdaOverviewCards: React.FC<BdaOverviewCardsProps> = ({
       title: 'New Enquiries',
       count: summary?.newEnquiries ?? 0,
       icon: Sparkles,
-      color: 'indigo',
-      bgColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
-      borderColor: 'border-indigo-200 dark:border-indigo-900/40',
+      bgColor: 'bg-indigo-50 text-indigo-600',
+      borderColor: 'border-indigo-200',
       activeRing: 'ring-2 ring-indigo-500 shadow-md',
     },
     {
@@ -50,9 +48,8 @@ export const BdaOverviewCards: React.FC<BdaOverviewCardsProps> = ({
       title: 'Pending Follow-ups',
       count: summary?.pendingFollowUps ?? 0,
       icon: Clock,
-      color: 'amber',
-      bgColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-      borderColor: 'border-amber-200 dark:border-amber-900/40',
+      bgColor: 'bg-amber-50 text-amber-600',
+      borderColor: 'border-amber-200',
       activeRing: 'ring-2 ring-amber-500 shadow-md',
     },
     {
@@ -60,9 +57,8 @@ export const BdaOverviewCards: React.FC<BdaOverviewCardsProps> = ({
       title: 'Interested',
       count: summary?.interested ?? 0,
       icon: HeartHandshake,
-      color: 'purple',
-      bgColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
-      borderColor: 'border-purple-200 dark:border-purple-900/40',
+      bgColor: 'bg-purple-50 text-purple-600',
+      borderColor: 'border-purple-200',
       activeRing: 'ring-2 ring-purple-500 shadow-md',
     },
     {
@@ -70,9 +66,8 @@ export const BdaOverviewCards: React.FC<BdaOverviewCardsProps> = ({
       title: 'Quotations Sent',
       count: summary?.quotationsSent ?? 0,
       icon: FileSpreadsheet,
-      color: 'sky',
-      bgColor: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
-      borderColor: 'border-sky-200 dark:border-sky-900/40',
+      bgColor: 'bg-sky-50 text-sky-600',
+      borderColor: 'border-sky-200',
       activeRing: 'ring-2 ring-sky-500 shadow-md',
     },
     {
@@ -80,9 +75,8 @@ export const BdaOverviewCards: React.FC<BdaOverviewCardsProps> = ({
       title: 'Converted',
       count: summary?.converted ?? 0,
       icon: CheckCircle2,
-      color: 'emerald',
-      bgColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-      borderColor: 'border-emerald-200 dark:border-emerald-900/40',
+      bgColor: 'bg-emerald-50 text-emerald-600',
+      borderColor: 'border-emerald-200',
       activeRing: 'ring-2 ring-emerald-500 shadow-md',
     },
   ];
@@ -97,12 +91,12 @@ export const BdaOverviewCards: React.FC<BdaOverviewCardsProps> = ({
           <button
             key={c.id}
             onClick={() => onSelectStatus(c.id)}
-            className={`flex flex-col text-left p-3.5 rounded-xl bg-white dark:bg-slate-900 border transition-all duration-150 hover:shadow-md cursor-pointer ${
+            className={`flex flex-col text-left p-4 rounded-xl bg-white border shadow-sm transition-all duration-150 hover:shadow-md cursor-pointer h-full ${
               c.borderColor
-            } ${isActive ? c.activeRing : 'hover:border-slate-300 dark:hover:border-slate-700'}`}
+            } ${isActive ? c.activeRing : 'hover:border-slate-300'}`}
           >
-            <div className="flex items-center justify-between w-full mb-2">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+            <div className="flex items-center justify-between w-full mb-2.5">
+              <span className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider truncate">
                 {c.title}
               </span>
               <div className={`p-1.5 rounded-lg ${c.bgColor}`}>
@@ -110,9 +104,9 @@ export const BdaOverviewCards: React.FC<BdaOverviewCardsProps> = ({
               </div>
             </div>
             <div className="flex items-baseline gap-1 mt-auto">
-              <span className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+              <span className="text-2xl font-bold text-[#0F172A] tracking-tight">
                 {isLoading ? (
-                  <span className="inline-block w-8 h-6 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                  <span className="inline-block w-8 h-6 bg-slate-200 rounded animate-pulse" />
                 ) : (
                   c.count.toLocaleString()
                 )}

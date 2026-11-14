@@ -262,17 +262,17 @@ export const BdaWorkspacePage: React.FC = () => {
       )}
 
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-200/80 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#E2E8F0]">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
               BDA Customer & Project Workspace
             </h1>
-            <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shadow-2xs">
-              {pagination.totalCount} Enquiries
+            <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs">
+              {pagination.totalCount} {pagination.totalCount === 1 ? 'Enquiry' : 'Enquiries'}
             </span>
           </div>
-          <p className="text-sm sm:text-base text-slate-500 font-medium mt-1">
+          <p className="text-sm sm:text-base text-[#64748B] font-medium mt-1">
             Business Development CRM, customer enquiry management, cross-department project linking, and offline Excel synchronization
           </p>
         </div>
@@ -284,7 +284,7 @@ export const BdaWorkspacePage: React.FC = () => {
             fetchCustomers();
           }}
           disabled={isLoadingCustomers}
-          className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 shadow-2xs transition-colors shrink-0"
+          className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl border border-[#E2E8F0] bg-white hover:bg-slate-50 text-[#0F172A] shadow-2xs transition-colors shrink-0 disabled:opacity-50"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isLoadingCustomers ? 'animate-spin' : ''}`} />
           <span>Refresh</span>
@@ -375,13 +375,13 @@ export const BdaWorkspacePage: React.FC = () => {
       {/* Delete Confirmation Modal */}
       {deletingCustomer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-[#E2E8F0] shadow-2xl p-6 space-y-4">
+            <h3 className="text-base font-bold text-[#0F172A]">
               Delete Customer Record?
             </h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <p className="text-xs text-[#64748B] leading-relaxed">
               Are you sure you want to permanently delete the enquiry record for{' '}
-              <strong className="text-slate-800 dark:text-slate-200">
+              <strong className="text-[#0F172A]">
                 &ldquo;{deletingCustomer.customerName}&rdquo;
               </strong>
               ? This action cannot be undone.
@@ -391,7 +391,7 @@ export const BdaWorkspacePage: React.FC = () => {
                 type="button"
                 onClick={() => setDeletingCustomer(null)}
                 disabled={isDeleting}
-                className="px-3.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                className="px-3.5 py-1.5 text-xs font-medium text-[#0F172A] hover:bg-slate-100 rounded-lg"
               >
                 Cancel
               </button>

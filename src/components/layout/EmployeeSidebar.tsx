@@ -11,6 +11,7 @@ import {
   Check,
   ChevronRight,
   TrendingUp,
+  Briefcase,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
@@ -32,6 +33,7 @@ export const EmployeeSidebar: React.FC<EmployeeSidebarProps> = ({ isOpen, onClos
   );
 
   const isDmAssigned = assignedDepts.some((d) => d.slug === 'digital-marketing');
+  const isBdaAssigned = assignedDepts.some((d) => d.slug === 'bda');
 
   const navigationItems = [
     { name: 'Dashboard', path: '/employee/dashboard', icon: LayoutDashboard },
@@ -39,6 +41,9 @@ export const EmployeeSidebar: React.FC<EmployeeSidebarProps> = ({ isOpen, onClos
     { name: 'My Projects', path: '/employee/projects', icon: FolderKanban },
     ...(isDmAssigned
       ? [{ name: 'Digital Marketing', path: '/employee/digital-marketing', icon: TrendingUp }]
+      : []),
+    ...(isBdaAssigned
+      ? [{ name: 'BDA Workspace', path: '/employee/bda', icon: Briefcase }]
       : []),
     { name: 'My Records', path: '/employee/records', icon: FileSpreadsheet },
   ];

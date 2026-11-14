@@ -36,6 +36,9 @@ import { MyRecords } from '../pages/employee/MyRecords';
 // Digital Marketing Dedicated Module
 import { DigitalMarketingWorkspacePage } from '../pages/digital-marketing/DigitalMarketingWorkspacePage';
 
+// BDA Dedicated Module
+import { BdaWorkspacePage } from '../pages/bda/BdaWorkspacePage';
+
 // Protected Route Component for Admin
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, isAdmin, isManager } = useAuth();
@@ -198,6 +201,14 @@ export const AppRoutes: React.FC = () => {
           </AdminRoute>
         }
       />
+      <Route
+        path="/admin/bda"
+        element={
+          <AdminRoute>
+            <BdaWorkspacePage />
+          </AdminRoute>
+        }
+      />
 
       {/* Manager Protected Routes */}
       <Route
@@ -264,6 +275,14 @@ export const AppRoutes: React.FC = () => {
           </ManagerRoute>
         }
       />
+      <Route
+        path="/manager/bda"
+        element={
+          <ManagerRoute>
+            <BdaWorkspacePage />
+          </ManagerRoute>
+        }
+      />
 
       {/* Employee Protected Routes */}
       <Route
@@ -312,6 +331,32 @@ export const AppRoutes: React.FC = () => {
           <EmployeeRoute>
             <MyRecords />
           </EmployeeRoute>
+        }
+      />
+      <Route
+        path="/employee/bda"
+        element={
+          <EmployeeRoute>
+            <BdaWorkspacePage />
+          </EmployeeRoute>
+        }
+      />
+
+      {/* Cross-Role BDA Route */}
+      <Route
+        path="/bda"
+        element={
+          currentUser ? (
+            isAdmin ? (
+              <Navigate to="/admin/bda" replace />
+            ) : isManager ? (
+              <Navigate to="/manager/bda" replace />
+            ) : (
+              <Navigate to="/employee/bda" replace />
+            )
+          ) : (
+            <Navigate to="/login" replace />
+          )
         }
       />
 

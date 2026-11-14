@@ -47,6 +47,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
         { name: 'Employees', path: '/admin/employees', icon: Users },
         { name: 'Projects', path: '/admin/projects', icon: FolderKanban },
         { name: 'Digital Marketing', path: '/admin/digital-marketing', icon: TrendingUp },
+        { name: 'BDA Workspace', path: '/admin/bda', icon: Briefcase },
         { name: 'Scheduler', path: '/admin/scheduler', icon: CalendarDays },
         { name: 'Tax Invoice', path: '/admin/tax-invoice', icon: Receipt },
         { name: 'Quotation', path: '/admin/quotation', icon: FileSpreadsheet },

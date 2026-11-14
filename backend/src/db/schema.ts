@@ -197,6 +197,42 @@ export const schedulerTasks = pgTable(
   ]
 );
 
+// 9. BDA Customers Table (Business Development Associate Customer & Enquiry Management)
+export const bdaCustomers = pgTable(
+  'bda_customers',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    customerName: varchar('customer_name', { length: 255 }).notNull(),
+    companyName: varchar('company_name', { length: 255 }),
+    phoneNumber: varchar('phone_number', { length: 50 }).notNull(),
+    email: varchar('email', { length: 255 }),
+    location: varchar('location', { length: 255 }),
+    projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
+    requiredSoftware: text('required_software').notNull(),
+    requirements: text('requirements'),
+    leadSource: varchar('lead_source', { length: 100 }),
+    enquiryDate: date('enquiry_date').notNull(), // YYYY-MM-DD
+    followUpStatus: varchar('follow_up_status', { length: 50 }).default('New').notNull(),
+    remarks: text('remarks'),
+    nextFollowUpDate: date('next_follow_up_date'), // YYYY-MM-DD
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id, { onDelete: 'restrict' }),
+    updatedBy: uuid('updated_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('bda_customers_customer_name_idx').on(table.customerName),
+    index('bda_customers_company_name_idx').on(table.companyName),
+    index('bda_customers_phone_number_idx').on(table.phoneNumber),
+    index('bda_customers_project_id_idx').on(table.projectId),
+    index('bda_customers_status_idx').on(table.followUpStatus),
+    index('bda_customers_enquiry_date_idx').on(table.enquiryDate),
+    index('bda_customers_created_by_idx').on(table.createdBy),
+  ]
+);
+
 // Drizzle Relations
 export const usersRelations = relations(users, ({ many }) => ({
   userDepartments: many(userDepartments),
@@ -204,6 +240,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   activities: many(dailyActivities),
   projectAssignments: many(projectAssignments),
   schedulerTasks: many(schedulerTasks),
+  createdBdaCustomers: many(bdaCustomers, { relationName: 'bdaCustomerCreator' }),
+  updatedBdaCustomers: many(bdaCustomers, { relationName: 'bdaCustomerUpdater' }),
 }));
 
 export const departmentsRelations = relations(departments, ({ many }) => ({
@@ -235,6 +273,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   activities: many(dailyActivities),
   digitalMarketingMonths: many(digitalMarketingMonths),
   assignments: many(projectAssignments),
+  bdaCustomers: many(bdaCustomers),
 }));
 
 export const projectAssignmentsRelations = relations(projectAssignments, ({ one }) => ({
@@ -293,6 +332,23 @@ export const schedulerTasksRelations = relations(schedulerTasks, ({ one }) => ({
   }),
 }));
 
+export const bdaCustomersRelations = relations(bdaCustomers, ({ one }) => ({
+  project: one(projects, {
+    fields: [bdaCustomers.projectId],
+    references: [projects.id],
+  }),
+  creator: one(users, {
+    fields: [bdaCustomers.createdBy],
+    references: [users.id],
+    relationName: 'bdaCustomerCreator',
+  }),
+  updater: one(users, {
+    fields: [bdaCustomers.updatedBy],
+    references: [users.id],
+    relationName: 'bdaCustomerUpdater',
+  }),
+}));
+
 // Types
 export type User = InferSelectModel<typeof users>;
 export type NewUser = InferInsertModel<typeof users>;
@@ -320,4 +376,8 @@ export type NewDigitalMarketingEntry = InferInsertModel<typeof digitalMarketingE
 
 export type SchedulerTask = InferSelectModel<typeof schedulerTasks>;
 export type NewSchedulerTask = InferInsertModel<typeof schedulerTasks>;
+
+export type BdaCustomer = InferSelectModel<typeof bdaCustomers>;
+export type NewBdaCustomer = InferInsertModel<typeof bdaCustomers>;
+
 

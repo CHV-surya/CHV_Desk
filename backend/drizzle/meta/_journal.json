@@ -43,6 +43,13 @@
       "when": 1793701258554,
       "tag": "0005_smooth_firebird",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794641891124,
+      "tag": "0006_bored_the_anarchist",
+      "breakpoints": true
     }
   ]
 }

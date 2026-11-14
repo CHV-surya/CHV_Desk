@@ -34,6 +34,7 @@ export const ManagerSidebar: React.FC<ManagerSidebarProps> = ({ isOpen, onClose 
   );
 
   const isDmAssigned = assignedDepts.some((d) => d.slug === 'digital-marketing');
+  const isBdaAssigned = assignedDepts.some((d) => d.slug === 'bda');
 
   const navGroups = [
     {
@@ -50,6 +51,15 @@ export const ManagerSidebar: React.FC<ManagerSidebarProps> = ({ isOpen, onClose 
                 name: 'Digital Marketing',
                 path: '/manager/digital-marketing',
                 icon: TrendingUp,
+              },
+            ]
+          : []),
+        ...(isBdaAssigned
+          ? [
+              {
+                name: 'BDA Workspace',
+                path: '/manager/bda',
+                icon: Briefcase,
               },
             ]
           : []),

@@ -236,8 +236,6 @@ function drawFooterAndPageNumber(
   if (footerItems.length > 0) {
     const gap = 8;
     const itemWidths = footerItems.map((item) => doc.getTextWidth(item.text) + 5);
-    const totalItemsWidth =
-      itemWidths.reduce((a, b) => a + b, 0) + (footerItems.length - 1) * gap;
 
     // Place slightly left of center to allow room for page number on right
     let curX = 12;
@@ -407,7 +405,6 @@ export function generateQuotationPDF(data: QuotationData): void {
 
   // ─── PREPARED FOR & COMPANY INFO (TWO-COLUMN CARDS) ───
   const cardWidth = (contentWidth - 5) / 2;
-  const cardStartY = y;
 
   // 1. Left Card: PREPARED FOR
   drawSectionBadge(doc, 'PREPARED FOR', margin, y);
@@ -761,6 +758,7 @@ export function generateQuotationPDF(data: QuotationData): void {
             hookData.cell.styles.fillColor = [241, 245, 249] as unknown as [number, number, number];
             hookData.cell.styles.textColor = NAVY as unknown as [number, number, number];
             hookData.cell.styles.fontStyle = 'bold';
+            if (hookData.column.index === 1) hookData.cell.styles.halign = 'right';
           } else {
             hookData.cell.styles.fillColor = WHITE as unknown as [number, number, number];
             hookData.cell.styles.lineWidth = 0;
@@ -772,6 +770,7 @@ export function generateQuotationPDF(data: QuotationData): void {
             hookData.cell.styles.fillColor = [248, 250, 252] as unknown as [number, number, number];
             hookData.cell.styles.textColor = NAVY as unknown as [number, number, number];
             hookData.cell.styles.fontStyle = 'bold';
+            if (hookData.column.index === 1) hookData.cell.styles.halign = 'right';
           } else {
             hookData.cell.styles.fillColor = WHITE as unknown as [number, number, number];
             hookData.cell.styles.lineWidth = 0;
@@ -784,6 +783,7 @@ export function generateQuotationPDF(data: QuotationData): void {
             hookData.cell.styles.textColor = WHITE as unknown as [number, number, number];
             hookData.cell.styles.fontStyle = 'bold';
             hookData.cell.styles.fontSize = 9.5;
+            if (hookData.column.index === 1) hookData.cell.styles.halign = 'right';
           } else {
             hookData.cell.styles.fillColor = WHITE as unknown as [number, number, number];
             hookData.cell.styles.lineWidth = 0;
@@ -796,6 +796,7 @@ export function generateQuotationPDF(data: QuotationData): void {
             hookData.cell.styles.fillColor = [241, 245, 249] as unknown as [number, number, number];
             hookData.cell.styles.textColor = NAVY as unknown as [number, number, number];
             hookData.cell.styles.fontStyle = 'bold';
+            if (hookData.column.index === 1) hookData.cell.styles.halign = 'right';
           } else {
             hookData.cell.styles.fillColor = WHITE as unknown as [number, number, number];
             hookData.cell.styles.lineWidth = 0;
@@ -808,6 +809,7 @@ export function generateQuotationPDF(data: QuotationData): void {
             hookData.cell.styles.textColor = WHITE as unknown as [number, number, number];
             hookData.cell.styles.fontStyle = 'bold';
             hookData.cell.styles.fontSize = 9.5;
+            if (hookData.column.index === 1) hookData.cell.styles.halign = 'right';
           } else {
             hookData.cell.styles.fillColor = WHITE as unknown as [number, number, number];
             hookData.cell.styles.lineWidth = 0;
@@ -960,7 +962,7 @@ export function generateQuotationPDF(data: QuotationData): void {
   }
 
   // ─── SAVE THE PDF ───
-  const safeNumber = (data.quotationNumber || 'CHV_QTN').replace(/[\/\\]/g, '_');
+  const safeNumber = (data.quotationNumber || 'CHV_QTN').replace(/[/\\]/g, '_');
   const fileName = `CHVApps_Quotation_${safeNumber}.pdf`;
 
   doc.save(fileName);

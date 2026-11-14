@@ -340,8 +340,10 @@ export const Quotation: React.FC = () => {
     (sum, item) => sum + (Number(item.amount) || 0),
     0
   );
-  const calculatedGstAmount = (calculatedPricingSubtotal * 18) / 100;
-  const calculatedGrandTotal = calculatedPricingSubtotal + calculatedGstAmount;
+  const calculatedGstAmount =
+    Math.round(((calculatedPricingSubtotal * 18) / 100) * 100) / 100;
+  const calculatedGrandTotal =
+    Math.round((calculatedPricingSubtotal + calculatedGstAmount) * 100) / 100;
 
   const handleToggleGst = (checked: boolean) => {
     setApplyGst(checked);
@@ -1426,7 +1428,7 @@ export const Quotation: React.FC = () => {
                             KEYPOINTS OF SERVICES & DELIVERABLES
                           </span>
 
-                          {serviceModules.slice(0, 3).map((mod, idx) => (
+                          {serviceModules.slice(0, 3).map((mod) => (
                             <div key={mod.id} className="border border-slate-200 rounded overflow-hidden text-[7px]">
                               <div className="bg-[#0F2149] text-white px-2 py-0.5 flex justify-between items-center font-bold">
                                 <span>{mod.title}</span>

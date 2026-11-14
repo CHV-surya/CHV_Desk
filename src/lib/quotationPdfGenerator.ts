@@ -56,6 +56,9 @@ export interface QuotationData {
   pricingItems: PricingItem[];
   subtotalInvestment: number;
   totalQuotationAmount: number;
+  applyGst?: boolean;
+  gstRate?: number;
+  gstAmount?: number;
 
   // Terms & Conditions
   terms: QuotationTerm[];
@@ -679,19 +682,43 @@ export function generateQuotationPDF(data: QuotationData): void {
       formatRupeeNumber(p.amount || 0),
     ]);
 
-  // Subtotal Investment row
-  tableBody.push([
-    '',
-    'Subtotal Investment',
-    formatIndianRupee(data.subtotalInvestment || 0),
-  ]);
+  if (data.applyGst) {
+    // 1. Subtotal row
+    tableBody.push([
+      '',
+      'Subtotal',
+      formatIndianRupee(data.subtotalInvestment || 0),
+    ]);
 
-  // TOTAL QUOTATION AMOUNT row
-  tableBody.push([
-    '',
-    'TOTAL QUOTATION AMOUNT',
-    formatIndianRupee(data.totalQuotationAmount || 0),
-  ]);
+    // 2. GST (18%) row
+    const gstRate = data.gstRate ?? 18;
+    tableBody.push([
+      '',
+      `GST (${gstRate}%)`,
+      formatIndianRupee(data.gstAmount || 0),
+    ]);
+
+    // 3. Grand Total row
+    tableBody.push([
+      '',
+      'Grand Total',
+      formatIndianRupee(data.totalQuotationAmount || 0),
+    ]);
+  } else {
+    // Subtotal Investment row
+    tableBody.push([
+      '',
+      'Subtotal Investment',
+      formatIndianRupee(data.subtotalInvestment || 0),
+    ]);
+
+    // TOTAL QUOTATION AMOUNT row
+    tableBody.push([
+      '',
+      'TOTAL QUOTATION AMOUNT',
+      formatIndianRupee(data.totalQuotationAmount || 0),
+    ]);
+  }
 
   autoTable(doc, {
     startY: y,
@@ -726,27 +753,65 @@ export function generateQuotationPDF(data: QuotationData): void {
     },
     didParseCell: (hookData) => {
       const totalRows = tableBody.length;
-      // Subtotal Row
-      if (hookData.section === 'body' && hookData.row.index === totalRows - 2) {
-        if (hookData.column.index >= 1) {
-          hookData.cell.styles.fillColor = [241, 245, 249] as unknown as [number, number, number];
-          hookData.cell.styles.textColor = NAVY as unknown as [number, number, number];
-          hookData.cell.styles.fontStyle = 'bold';
-        } else {
-          hookData.cell.styles.fillColor = WHITE as unknown as [number, number, number];
-          hookData.cell.styles.lineWidth = 0;
+
+      if (data.applyGst) {
+        // Subtotal Row (totalRows - 3)
+        if (hookData.section === 'body' && hookData.row.index === totalRows - 3) {
+          if (hookData.column.index >= 1) {
+            hookData.cell.styles.fillColor = [241, 245, 249] as unknown as [number, number, number];
+            hookData.cell.styles.textColor = NAVY as unknown as [number, number, number];
+            hookData.cell.styles.fontStyle = 'bold';
+          } else {
+            hookData.cell.styles.fillColor = WHITE as unknown as [number, number, number];
+            hookData.cell.styles.lineWidth = 0;
+          }
         }
-      }
-      // Grand Total Row
-      if (hookData.section === 'body' && hookData.row.index === totalRows - 1) {
-        if (hookData.column.index >= 1) {
-          hookData.cell.styles.fillColor = NAVY as unknown as [number, number, number];
-          hookData.cell.styles.textColor = WHITE as unknown as [number, number, number];
-          hookData.cell.styles.fontStyle = 'bold';
-          hookData.cell.styles.fontSize = 9.5;
-        } else {
-          hookData.cell.styles.fillColor = WHITE as unknown as [number, number, number];
-          hookData.cell.styles.lineWidth = 0;
+        // GST (18%) Row (totalRows - 2)
+        if (hookData.section === 'body' && hookData.row.index === totalRows - 2) {
+          if (hookData.column.index >= 1) {
+            hookData.cell.styles.fillColor = [248, 250, 252] as unknown as [number, number, number];
+            hookData.cell.styles.textColor = NAVY as unknown as [number, number, number];
+            hookData.cell.styles.fontStyle = 'bold';
+          } else {
+            hookData.cell.styles.fillColor = WHITE as unknown as [number, number, number];
+            hookData.cell.styles.lineWidth = 0;
+          }
+        }
+        // Grand Total Row (totalRows - 1)
+        if (hookData.section === 'body' && hookData.row.index === totalRows - 1) {
+          if (hookData.column.index >= 1) {
+            hookData.cell.styles.fillColor = NAVY as unknown as [number, number, number];
+            hookData.cell.styles.textColor = WHITE as unknown as [number, number, number];
+            hookData.cell.styles.fontStyle = 'bold';
+            hookData.cell.styles.fontSize = 9.5;
+          } else {
+            hookData.cell.styles.fillColor = WHITE as unknown as [number, number, number];
+            hookData.cell.styles.lineWidth = 0;
+          }
+        }
+      } else {
+        // Subtotal Row (totalRows - 2)
+        if (hookData.section === 'body' && hookData.row.index === totalRows - 2) {
+          if (hookData.column.index >= 1) {
+            hookData.cell.styles.fillColor = [241, 245, 249] as unknown as [number, number, number];
+            hookData.cell.styles.textColor = NAVY as unknown as [number, number, number];
+            hookData.cell.styles.fontStyle = 'bold';
+          } else {
+            hookData.cell.styles.fillColor = WHITE as unknown as [number, number, number];
+            hookData.cell.styles.lineWidth = 0;
+          }
+        }
+        // Grand Total Row (totalRows - 1)
+        if (hookData.section === 'body' && hookData.row.index === totalRows - 1) {
+          if (hookData.column.index >= 1) {
+            hookData.cell.styles.fillColor = NAVY as unknown as [number, number, number];
+            hookData.cell.styles.textColor = WHITE as unknown as [number, number, number];
+            hookData.cell.styles.fontStyle = 'bold';
+            hookData.cell.styles.fontSize = 9.5;
+          } else {
+            hookData.cell.styles.fillColor = WHITE as unknown as [number, number, number];
+            hookData.cell.styles.lineWidth = 0;
+          }
         }
       }
     },

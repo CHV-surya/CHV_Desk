@@ -180,6 +180,18 @@ function formatINR(num: number): string {
   return `₹${formatted}.${decPart}`;
 }
 
+function formatRupeeNumber(num: number): string {
+  if (isNaN(num)) return '0.00';
+  const fixed = num.toFixed(2);
+  const [intPart, decPart] = fixed.split('.');
+  const lastThree = intPart.slice(-3);
+  const remaining = intPart.slice(0, -3);
+  const formatted = remaining.length
+    ? remaining.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + ',' + lastThree
+    : lastThree;
+  return `${formatted}.${decPart}`;
+}
+
 // ─── REUSABLE UI CARD COMPONENT ───
 const SectionCard: React.FC<{
   title: string;
@@ -205,7 +217,19 @@ const InputField: React.FC<{
   required?: boolean;
   type?: string;
   className?: string;
-}> = ({ label, value, onChange, placeholder, required, type = 'text', className = '' }) => (
+  readOnly?: boolean;
+  disabled?: boolean;
+}> = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  required,
+  type = 'text',
+  className = '',
+  readOnly = false,
+  disabled = false,
+}) => (
   <div className={className}>
     <label className="block text-xs font-semibold text-slate-600 mb-1.5">
       {label}
@@ -216,7 +240,13 @@ const InputField: React.FC<{
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-white transition-all placeholder:text-slate-400"
+      readOnly={readOnly}
+      disabled={disabled}
+      className={`w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-white transition-all placeholder:text-slate-400 ${
+        readOnly || disabled
+          ? 'bg-slate-50 text-slate-700 cursor-not-allowed select-none font-semibold'
+          : ''
+      }`}
     />
   </div>
 );
@@ -303,6 +333,26 @@ export const Quotation: React.FC = () => {
   ]);
   const [subtotalInvestment, setSubtotalInvestment] = useState<number>(15000);
   const [totalQuotationAmount, setTotalQuotationAmount] = useState<number>(15000);
+  const [applyGst, setApplyGst] = useState<boolean>(false);
+
+  // Dynamic calculations from pricing rows
+  const calculatedPricingSubtotal = pricingItems.reduce(
+    (sum, item) => sum + (Number(item.amount) || 0),
+    0
+  );
+  const calculatedGstAmount = (calculatedPricingSubtotal * 18) / 100;
+  const calculatedGrandTotal = calculatedPricingSubtotal + calculatedGstAmount;
+
+  const handleToggleGst = (checked: boolean) => {
+    setApplyGst(checked);
+    if (checked) {
+      setSubtotalInvestment(calculatedPricingSubtotal);
+      setTotalQuotationAmount(calculatedGrandTotal);
+    } else {
+      setSubtotalInvestment(calculatedPricingSubtotal);
+      setTotalQuotationAmount(calculatedPricingSubtotal);
+    }
+  };
 
   // ─── 7. Terms & Conditions ───
   const [terms, setTerms] = useState<QuotationTerm[]>([...DEFAULT_TERMS]);
@@ -522,6 +572,9 @@ export const Quotation: React.FC = () => {
       return;
     }
 
+    const finalSubtotal = applyGst ? calculatedPricingSubtotal : subtotalInvestment;
+    const finalTotal = applyGst ? calculatedGrandTotal : totalQuotationAmount;
+
     const quotationData: QuotationData = {
       companyName,
       tagline,
@@ -542,8 +595,11 @@ export const Quotation: React.FC = () => {
       objectiveDescription,
       serviceModules,
       pricingItems,
-      subtotalInvestment,
-      totalQuotationAmount,
+      subtotalInvestment: finalSubtotal,
+      totalQuotationAmount: finalTotal,
+      applyGst,
+      gstRate: applyGst ? 18 : undefined,
+      gstAmount: applyGst ? calculatedGstAmount : undefined,
       terms,
       authorizedByName,
       authorizedByCompany,
@@ -980,27 +1036,90 @@ export const Quotation: React.FC = () => {
                   Add Pricing Item
                 </button>
 
-                <div className="pt-3 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <InputField
-                    label="Subtotal Investment (₹)"
-                    value={String(subtotalInvestment || '')}
-                    onChange={(val) => setSubtotalInvestment(Number(val) || 0)}
-                    placeholder="15000"
-                    type="number"
-                    required
-                  />
-                  <InputField
-                    label="TOTAL QUOTATION AMOUNT (₹)"
-                    value={String(totalQuotationAmount || '')}
-                    onChange={(val) => setTotalQuotationAmount(Number(val) || 0)}
-                    placeholder="15000"
-                    type="number"
-                    required
-                  />
+                {/* GST Checkbox */}
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                  <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      id="apply-gst-checkbox"
+                      checked={applyGst}
+                      onChange={(e) => handleToggleGst(e.target.checked)}
+                      className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <span className="text-xs sm:text-sm font-bold text-slate-800">
+                      Apply GST (18%)
+                    </span>
+                  </label>
+                  <span
+                    className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
+                      applyGst
+                        ? 'bg-blue-100 text-blue-700 border-blue-200'
+                        : 'bg-slate-200 text-slate-600 border-slate-300'
+                    }`}
+                  >
+                    {applyGst ? '18% GST Enabled' : 'GST Disabled'}
+                  </span>
                 </div>
-                <p className="text-[11px] text-slate-400">
-                  All commercial figures are manually entered. No automated taxes or GST are calculated.
-                </p>
+
+                {/* Commercial Totals */}
+                {applyGst ? (
+                  <div className="pt-3 border-t border-slate-200 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <InputField
+                        label="Subtotal (₹)"
+                        value={formatRupeeNumber(calculatedPricingSubtotal)}
+                        onChange={() => {}}
+                        placeholder="0.00"
+                        readOnly
+                      />
+                      <InputField
+                        label="GST (18%) (₹)"
+                        value={formatRupeeNumber(calculatedGstAmount)}
+                        onChange={() => {}}
+                        placeholder="0.00"
+                        readOnly
+                      />
+                      <InputField
+                        label="Grand Total (₹)"
+                        value={formatRupeeNumber(calculatedGrandTotal)}
+                        onChange={() => {}}
+                        placeholder="0.00"
+                        readOnly
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-xs bg-blue-50/70 border border-blue-200/60 rounded-lg p-2.5 text-blue-950 font-medium">
+                      <span>Breakdown: {formatINR(calculatedPricingSubtotal)} + 18% GST ({formatINR(calculatedGstAmount)})</span>
+                      <span className="font-bold text-blue-700">= {formatINR(calculatedGrandTotal)}</span>
+                    </div>
+                    <p className="text-[11px] text-blue-600 font-medium">
+                      18% GST is automatically calculated on the combined subtotal of all pricing items.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="pt-3 border-t border-slate-200 space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <InputField
+                        label="Subtotal Investment (₹)"
+                        value={String(subtotalInvestment || '')}
+                        onChange={(val) => setSubtotalInvestment(Number(val) || 0)}
+                        placeholder="15000"
+                        type="number"
+                        required
+                      />
+                      <InputField
+                        label="TOTAL QUOTATION AMOUNT (₹)"
+                        value={String(totalQuotationAmount || '')}
+                        onChange={(val) => setTotalQuotationAmount(Number(val) || 0)}
+                        placeholder="15000"
+                        type="number"
+                        required
+                      />
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      All commercial figures are manually entered. No automated taxes or GST are calculated.
+                    </p>
+                  </div>
+                )}
               </div>
             </SectionCard>
 
@@ -1396,14 +1515,33 @@ export const Quotation: React.FC = () => {
                               ))}
                             </tbody>
                             <tfoot>
-                              <tr className="bg-slate-100 font-bold">
-                                <td colSpan={2} className="py-1 px-1.5 text-right">Subtotal Investment</td>
-                                <td className="py-1 px-1.5 text-right">{formatINR(subtotalInvestment)}</td>
-                              </tr>
-                              <tr className="bg-[#0F2149] text-white font-black">
-                                <td colSpan={2} className="py-1 px-1.5 text-right">TOTAL QUOTATION AMOUNT</td>
-                                <td className="py-1 px-1.5 text-right">{formatINR(totalQuotationAmount)}</td>
-                              </tr>
+                              {applyGst ? (
+                                <>
+                                  <tr className="bg-slate-100 font-bold text-slate-700">
+                                    <td colSpan={2} className="py-1 px-1.5 text-right">Subtotal</td>
+                                    <td className="py-1 px-1.5 text-right">{formatINR(calculatedPricingSubtotal)}</td>
+                                  </tr>
+                                  <tr className="bg-slate-50 font-bold text-[#0F2149]">
+                                    <td colSpan={2} className="py-1 px-1.5 text-right">GST (18%)</td>
+                                    <td className="py-1 px-1.5 text-right">{formatINR(calculatedGstAmount)}</td>
+                                  </tr>
+                                  <tr className="bg-[#0F2149] text-white font-black">
+                                    <td colSpan={2} className="py-1 px-1.5 text-right">Grand Total</td>
+                                    <td className="py-1 px-1.5 text-right">{formatINR(calculatedGrandTotal)}</td>
+                                  </tr>
+                                </>
+                              ) : (
+                                <>
+                                  <tr className="bg-slate-100 font-bold">
+                                    <td colSpan={2} className="py-1 px-1.5 text-right">Subtotal Investment</td>
+                                    <td className="py-1 px-1.5 text-right">{formatINR(subtotalInvestment)}</td>
+                                  </tr>
+                                  <tr className="bg-[#0F2149] text-white font-black">
+                                    <td colSpan={2} className="py-1 px-1.5 text-right">TOTAL QUOTATION AMOUNT</td>
+                                    <td className="py-1 px-1.5 text-right">{formatINR(totalQuotationAmount)}</td>
+                                  </tr>
+                                </>
+                              )}
                             </tfoot>
                           </table>
                         </div>
